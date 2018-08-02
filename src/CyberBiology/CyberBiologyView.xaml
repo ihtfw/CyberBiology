@@ -1,0 +1,54 @@
+﻿<Window x:Class="CyberBiology.CyberBiologyView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" WindowStartupLocation="CenterScreen" WindowState="Maximized"
+        Icon="Resources/icon.ico"
+        Height="450" Width="800">
+    <DockPanel>
+        
+        <StatusBar DockPanel.Dock="Bottom">
+            <TextBlock Text="Generation:"></TextBlock>
+            <TextBlock Text="{Binding Path=Generation}"></TextBlock>
+
+            <TextBlock Text="Population:"></TextBlock>
+            <TextBlock Text="{Binding Path=Population}"></TextBlock>
+
+            <TextBlock Text="Organic:"></TextBlock>
+            <TextBlock Text="{Binding Path=Organic}"></TextBlock>
+        </StatusBar>
+
+        <Slider DockPanel.Dock="Right" Orientation="Vertical" Minimum="0.1" Value="1" Maximum="50" x:Name="slider" Margin="5"/>
+
+        <Grid x:Name="ImageGrid">
+            <ScrollViewer Name="scrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" >
+                <Grid Name="grid" RenderTransformOrigin="0.5,0.5">
+                    <Grid.LayoutTransform>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="scaleTransform"/>
+                        </TransformGroup>
+                    </Grid.LayoutTransform>
+                    <Viewbox>
+                        <Viewbox>
+                            <Canvas Width="{Binding Path=Width}" Height="{Binding Path=Height}">
+                                <Image x:Name="WorldImage" Source="{Binding Path=WorldImage}"
+                                ></Image>
+<!--
+                                <Image cal:Message.Attach="[Event PreviewMouseLeftButtonUp] = [Action ImgMouseClicked($source,$eventArgs)]"
+                                       Source="{Binding Path=ImageFromRecognizer, Mode=OneWay, Converter={converters:BitmapToBitmapSourceConverter}}" />
+                                -->
+                            </Canvas>
+                        </Viewbox>
+                    </Viewbox>
+                </Grid>
+
+            </ScrollViewer>
+            <!--
+            <Image x:Name="WorldImage" Source="{Binding Path=WorldImage}"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+            ></Image>
+            -->
+        </Grid>
+    </DockPanel>
+</Window>
