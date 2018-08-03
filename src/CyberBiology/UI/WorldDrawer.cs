@@ -20,6 +20,15 @@ namespace CyberBiology.UI
             return BitmapFactory.New(world.Width * CellSize + 2, world.Height * CellSize + 2);
         }
 
+        public void BaseDraw(World world, WriteableBitmap bmp)
+        {
+            using (bmp.GetBitmapContext())
+            {
+                bmp.FillRectangleWH(0, 0, (int)bmp.Width, (int)bmp.Height, BackgroundColor);
+                bmp.DrawRectangleWH(0, 0, (int)bmp.Width - 1, (int)bmp.Height - 1, BorderColor);
+            }
+        }
+
         public void Draw(World world, WriteableBitmap bmp)
         {
             using (bmp.GetBitmapContext())

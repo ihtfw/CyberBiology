@@ -13,7 +13,6 @@
         CheckMinerals,
         SkipNextIfSurrounded,
         HasEnergyIncome,
-        AreMineralGrow,
         ConvertMineralToEnergy,
         Mutate,
         GeneAttack,

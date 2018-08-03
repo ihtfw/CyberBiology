@@ -34,17 +34,19 @@ namespace CyberBiology
             {
                 _world = new World(Width / WorldDrawer.CellSize, Height / WorldDrawer.CellSize);
                 _world.CreateAdam();
-
+                
                 Execute.OnUIThread(() =>
                 {
                     WorldImage = _worldDrawer.Create(_world);
+                    _worldDrawer.BaseDraw(_world, WorldImage);
                 });
-                
+
                 while (true)
                 {
                     _world.NextGenerationInParallel();
 
-                    //if (_world.Generation % 10 == 0)
+                    var k = (_world.Population + _world.Organic) / 10000 + 1;
+                    if (_world.Generation % k == 0)
                     {
                         Execute.OnUIThread(() =>
                         {
@@ -55,14 +57,10 @@ namespace CyberBiology
                     Generation = _world.Generation;
                     Population = _world.Population;
                     Organic = _world.Organic;
-
-                    Thread.Sleep(Speed);
                 }
             }, TaskCreationOptions.LongRunning);
         }
-
-        public int Speed { get; set; }
-
+        
         public int Width { get; private set; }
         public int Height { get; private set; }
 

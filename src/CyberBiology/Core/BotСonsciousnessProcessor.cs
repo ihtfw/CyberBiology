@@ -82,11 +82,11 @@ namespace CyberBiology.Core
 
         private void ActionsLoop(Bot bot)
         {
-            for (int i = 0; i < 15; i++)
+            //for (int i = 0; i < 15; i++)
             {
                 var action = bot.Consciousness.NextAction();
                 if (!action.IsValid())
-                    continue;
+                    return;
 
                 switch (action.Action)
                 {
@@ -133,13 +133,6 @@ namespace CyberBiology.Core
                             bot.Consciousness.SkipActions(1);
                         }
                         break;
-                    case Actions.AreMineralGrow:
-                        if (bot.Y < World.Instance.Height / 2)
-                        {
-                            bot.Consciousness.SkipActions(1);
-                        }
-
-                        break;
                     case Actions.ConvertMineralToEnergy:
                         bot.ConvertMineralToEnergy();
                         break;
@@ -152,8 +145,8 @@ namespace CyberBiology.Core
                         break;
                 }
 
-                if (action.IsStopAction)
-                    break;
+                //if (action.IsStopAction)
+                //    break;
             }
         }
         
