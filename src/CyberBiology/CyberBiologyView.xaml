@@ -19,7 +19,10 @@
             <TextBlock Text="{Binding Path=Organic}"></TextBlock>
         </StatusBar>
 
-        <Slider DockPanel.Dock="Right" Orientation="Vertical" Minimum="0.1" Value="1" Maximum="50" x:Name="slider" Margin="5"/>
+        <UniformGrid Rows="2" DockPanel.Dock="Right">
+            <Slider Orientation="Vertical" Minimum="0" Value="{Binding Path=Speed}" Maximum="500"  Margin="5"/>
+            <Slider Orientation="Vertical" Minimum="0.1" Value="1" Maximum="50" x:Name="slider" Margin="5"/>
+        </UniformGrid>
 
         <Grid x:Name="ImageGrid">
             <ScrollViewer Name="scrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" >

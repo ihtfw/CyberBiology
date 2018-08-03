@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using Caliburn.Micro;
 using CyberBiology.Core;
@@ -22,7 +23,7 @@ namespace CyberBiology
 
             Width = 512;
             Height = 512;
-
+           
             if (view is CyberBiologyView cyberBiologyView)
             {
                 Width = (int)cyberBiologyView.ImageGrid.ActualWidth;
@@ -31,7 +32,7 @@ namespace CyberBiology
 
             Task.Factory.StartNew(() =>
             {
-                _world = new World(Width / 4, Height / 4);
+                _world = new World(Width / WorldDrawer.CellSize, Height / WorldDrawer.CellSize);
                 _world.CreateAdam();
 
                 Execute.OnUIThread(() =>
@@ -53,9 +54,13 @@ namespace CyberBiology
                     Generation = _world.Generation;
                     Population = _world.Population;
                     Organic = _world.Organic;
+
+                    Thread.Sleep(Speed);
                 }
             }, TaskCreationOptions.LongRunning);
         }
+
+        public int Speed { get; set; }
 
         public int Width { get; private set; }
         public int Height { get; private set; }

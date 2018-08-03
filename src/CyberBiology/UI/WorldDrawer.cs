@@ -9,11 +9,15 @@ namespace CyberBiology.UI
         public Color BackgroundColor { get; set; } = Colors.White;
         public Color BorderColor { get; set; } = Colors.Brown;
 
+        public Color BotBorderColor { get; set; } = Colors.Black;
+
         public Color OrganicColor { get; set; } = Color.FromRgb(200, 200, 200);
-        
+
+        public const int CellSize = 4;
+
         public WriteableBitmap Create(World world)
         {
-            return BitmapFactory.New(world.Width * 4 + 2, world.Height * 4 + 2);
+            return BitmapFactory.New(world.Width * CellSize + 2, world.Height * CellSize + 2);
         }
 
         public void Draw(World world, WriteableBitmap bmp)
@@ -29,25 +33,32 @@ namespace CyberBiology.UI
                     {
                         var bot = world.Matrix[x,y];
 
+                        var x1 = 1 + x * CellSize;
+                        var y1 = 1 + y * CellSize;
+
                         if (bot == null)
                         {
-                            bmp.FillRectangleWH(1 + x * 4, 1 + y * 4, 4, 4, BackgroundColor);
+                            //bmp.FillRectangleWH(x1, y1, CellSize, CellSize, BackgroundColor);
+                            continue;
                         }
-                        else if ((bot.IsOrganic))
+
+                        if (bot.IsOrganic)
                         {
-                            bmp.FillRectangleWH(1 + x * 4, 1 + y * 4, 4, 4, OrganicColor);
+                            bmp.FillRectangleWH(x1, y1, CellSize, CellSize, OrganicColor);
+                            continue;
                         }
-                        else if (bot.IsAlive)
+
+                        if (bot.IsAlive)
                         {
-                            bmp.DrawRectangleWH(1 + x * 4, 1 + y * 4, 4, 4, Colors.Black);
+                            bmp.DrawRectangleWH(x1, y1, CellSize, CellSize, BotBorderColor);
 
-                            int green = bot.Color.G - ((bot.Color.G * bot.health) / 2000);
-                            if (green < 0) green = 0;
-                            if (green > 255) green = 255;
-                            int blue = (int)(bot.Color.B * 0.8 - ((bot.Color.B * bot.mineral) / 2000));
-                            var color = Color.FromRgb((byte)bot.Color.R, (byte) green, (byte) blue);
+                            int green = bot.Color.G - bot.Color.G * bot.health / 2000;
+                            
+                            int blue = (int)(bot.Color.B * 0.8 - bot.Color.B * bot.mineral / 2000);
 
-                            bmp.FillRectangleWH(1 + x * 4 + 1, 1 + y * 4 + 1, 3, 3, color);
+                            var color = Color.FromRgb((byte)bot.Color.R, BotColor.Limit(green), BotColor.Limit(blue));
+
+                            bmp.FillRectangleWH(x1 + 1, y1 + 1, CellSize - 1, CellSize - 1, color);
                         }
                     }
                 }

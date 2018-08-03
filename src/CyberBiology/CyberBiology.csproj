@@ -84,9 +84,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Core\Enums\CheckResult.cs" />
+    <Compile Include="Core\Enums\Actions.cs" />
     <Compile Include="Core\BotColor.cs" />
+    <Compile Include="Core\BotAction.cs" />
+    <Compile Include="Core\BotСonsciousnessProcessor.cs" />
+    <Compile Include="Core\BotСonsciousness.cs" />
     <Compile Include="Core\Enums\BotState.cs" />
-    <Compile Include="Core\Enums\Gene.cs" />
+    <Compile Include="Core\Group.cs" />
     <Compile Include="UI\WorldDrawer.cs" />
     <Compile Include="UI\WriteableBitmapExEx.cs" />
     <Page Include="CyberBiologyView.xaml">
