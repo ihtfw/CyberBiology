@@ -6,7 +6,7 @@ using Ninject;
 
 namespace CyberBiology
 {
-    public class Bootstrapper : Caliburn.Micro.BootstrapperBase
+    public class Bootstrapper : BootstrapperBase
     {
         private readonly IKernel _kernel = new StandardKernel();
 

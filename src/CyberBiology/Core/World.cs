@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using CyberBiology.Core.Enums;
 
 namespace CyberBiology.Core
 {
     public class World
     {
-        private BotСonsciousnessProcessor _botСonsciousnessProcessor = new BotСonsciousnessProcessor();
+        public const int BlockSize = 20;
+
+        private readonly BotСonsciousnessProcessor _botСonsciousnessProcessor = new BotСonsciousnessProcessor();
 
         public static World Instance;
         public readonly int Height;
@@ -20,8 +24,14 @@ namespace CyberBiology.Core
             Matrix = new Bot[width, height];
 
             Instance = this;
+
+            BlocksX = (int)Math.Ceiling(Width / (double)BlockSize);
+            BlocksY = (int)Math.Ceiling(Height / (double)BlockSize);
         }
 
+        public int BlocksX { get; }
+
+        public int BlocksY { get; }
 
         public int Generation { get; private set; }
 
@@ -29,6 +39,54 @@ namespace CyberBiology.Core
 
         public int Organic { get; private set; }
 
+        public void NextGenerationInParallel()
+        {
+            int totalPopulation = 0;
+            int totalOrganic = 0;
+
+            //Block are left to right, up to down
+            Parallel.For(0, BlocksX * BlocksY, i =>
+            {
+                int population = 0;
+                int organic = 0;
+
+                var x = i % BlocksX * BlockSize;
+                var y = i / BlocksX * BlockSize;
+
+                for (var yw = y; yw < y + BlockSize; yw++)
+                {
+                    for (var xw = x; xw < x + BlockSize; xw++)
+                    {
+                        if (xw >= Width)
+                            continue;
+
+                        if (yw >= Height)
+                            continue;
+
+                        var bot = Matrix[xw, yw];
+                        if (bot == null) continue;
+
+                        _botСonsciousnessProcessor.Process(bot);
+
+                        if (bot.IsAlive)
+                        {
+                            population++;
+                        }
+                        else if (bot.IsOrganic)
+                        {
+                            organic++;
+                        }
+                    }
+                }
+
+                Interlocked.Add(ref totalPopulation, population);
+                Interlocked.Add(ref totalOrganic, organic);
+            });
+            
+            Population = totalPopulation;
+            Organic = totalOrganic;
+            Generation++;
+        }
 
         public void NextGeneration()
         {
@@ -61,17 +119,13 @@ namespace CyberBiology.Core
         
         public void CreateAdam()
         {
-            var bot = new Bot
-            {
-                x = Width / 2,
-                y = Height / 2,
-                health = 990
-            };
+            var bot = BotFactory.Get(Width / 2, Height / 2);
+            bot.Health = 990;
 
             bot.SetDirection(5);
             bot.Color.Adam();
             
-            Matrix[bot.x, bot.y] = bot; 
+            Matrix[bot.X, bot.Y] = bot; 
         }
 
         public CheckResult Check(Bot checkForBot, int x, int y)
@@ -132,15 +186,17 @@ namespace CyberBiology.Core
             if (bot == null)
                 return false;
 
-            Bot pbot = bot.mprev;
-            Bot nbot = bot.mnext;
+            Bot pbot = bot.PrevBot;
+            Bot nbot = bot.NextBot;
 
-            if (pbot != null) { pbot.mnext = null; } // удаление бота из многоклеточной цепочки
-            if (nbot != null) { nbot.mprev = null; }
-            bot.mprev = null;
-            bot.mnext = null;
+            if (pbot != null) { pbot.NextBot = null; } // удаление бота из многоклеточной цепочки
+            if (nbot != null) { nbot.PrevBot = null; }
+            bot.PrevBot = null;
+            bot.NextBot = null;
 
-            Matrix[bot.x, bot.y] = null; // удаление бота с карты
+            Matrix[bot.X, bot.Y] = null; // удаление бота с карты
+
+            BotFactory.ToCache(bot);
 
             return true;
         }

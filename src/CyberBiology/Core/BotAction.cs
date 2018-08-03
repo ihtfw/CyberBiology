@@ -9,6 +9,7 @@ namespace CyberBiology.Core
 
         private static readonly int MinActionValue = int.MaxValue;
         private static readonly int MaxActionValue = int.MinValue;
+        private Actions _action = Actions.Photosynthesis;
 
         static BotAction()
         {
@@ -26,47 +27,44 @@ namespace CyberBiology.Core
 
         public int Index { get; }
 
-        public Actions Action { get; private set; } = Actions.Photosynthesis;
-        
-        public bool HasParam()
+        public Actions Action
         {
-            switch (Action)
+            get => _action;
+            private set
             {
-                case Actions.CheckHealth:
-                case Actions.CheckMinerals:
-                case Actions.Skip:
-                    return true;
-                default:
-                    return false;
+                _action = value;
+
+                switch (Action)
+                {
+                    case Actions.CheckHealth:
+                    case Actions.CheckMinerals:
+                    case Actions.Skip:
+                        HasParam = true;
+                        IsStopAction = false;
+                        break;
+
+                    case Actions.Move:
+                    case Actions.BotDivision:
+                        IsStopAction = true;
+                        HasParam = false;
+                        break;
+
+                    default:
+                        IsStopAction = false;
+                        HasParam = false;
+                        break;
+                }
             }
         }
+
+        public bool HasParam { get; private set; }
+        public bool IsStopAction { get; private set; }
         
         public void Mutate()
         {
             Action = (Actions)(Random.NextDouble() * (MaxActionValue + MinActionValue));
         }
-
-        public bool IsStopAction()
-        {
-            switch (Action)
-            {
-                case Actions.Move:
-                case Actions.BotDivision:
-                case Actions.Skip:
-                    return true;
-            }
-
-            return false;
-        }
-
-        public BotAction Clone()
-        {
-            return new BotAction(Index)
-            {
-                Action = Action
-            };
-        }
-
+        
         public bool IsValid()
         {
             if ((int)Action < MinActionValue)
@@ -81,6 +79,11 @@ namespace CyberBiology.Core
         public override string ToString()
         {
             return $"{Index}: {Action}";
+        }
+
+        public void TranferFrom(BotAction action)
+        {
+            Action = action.Action;
         }
     }
 }

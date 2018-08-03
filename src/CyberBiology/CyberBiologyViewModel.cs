@@ -42,8 +42,9 @@ namespace CyberBiology
                 
                 while (true)
                 {
-                    _world.NextGeneration();
-                    if (_world.Generation % 10 == 0)
+                    _world.NextGenerationInParallel();
+
+                    //if (_world.Generation % 10 == 0)
                     {
                         Execute.OnUIThread(() =>
                         {

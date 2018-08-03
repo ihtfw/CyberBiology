@@ -1,5 +1,4 @@
 ﻿using System;
-using CyberBiology.Core.Enums;
 
 namespace CyberBiology.Core
 {
@@ -49,7 +48,7 @@ namespace CyberBiology.Core
 
             _currentActionIndex++;
 
-            if (action.HasParam())
+            if (action.HasParam)
                 _currentActionIndex++;
 
             _currentActionIndex = _currentActionIndex % Size;
@@ -86,7 +85,7 @@ namespace CyberBiology.Core
         {
             for (int i = 0; i < Size; i++)
             {
-                _actions[i] = otherСonsciousness._actions[i].Clone();
+                _actions[i].TranferFrom(otherСonsciousness._actions[i]);
             }
 
             UpdateHash();

@@ -1,41 +1,61 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using CyberBiology.Core.Enums;
 
 namespace CyberBiology.Core
 {
     public class Bot
     {
+        public static readonly int[] XOffset = { -1, 0, 1, 1, 1, 0, -1, -1 };
+        public static readonly int[] YOffset = { -1, -1, -1, 0, 1, 1, 1, 0 };
+
         public const int MaxHealth = 1000;
         public const int MaxMinerals = 1000;
 
         private static readonly Random Random = new Random();
 
-        public int x;
-        public int y;
-        public int health;
-        public int mineral;
-        
+        public int X;
+        public int Y;
+        public int Health;
+        public int Mineral;
+        private Bot _prevBot;
+        private Bot _nextBot;
+
         public int Direction { get; private set; }
-        
-        public Bot mprev;
-        public Bot mnext;
+
+        public Bot PrevBot
+        {
+            get => _prevBot;
+            set
+            {
+                _prevBot = value;
+                UpdateGroup();
+            }
+        }
+
+        public Bot NextBot
+        {
+            get => _nextBot;
+            set
+            {
+                _nextBot = value;
+                UpdateGroup();
+            }
+        }
 
         public BotСonsciousness Consciousness { get; } = new BotСonsciousness();
 
         public BotColor Color { get; } = new BotColor();
         public BotState State { get; private set; }
-
-        public Bot()
+        
+        public Bot(int x, int y)
         {
+            X = x;
+            Y = y;
+
             Direction = 2;
-            health = 5;
+            Health = 5;
             State = BotState.Alive;
-        }
-
-        private Bot(int x, int y) : this()
-        {
-            this.x = x;
-            this.y = y;
         }
 
         public bool IsAlive => State == BotState.Alive;
@@ -49,85 +69,43 @@ namespace CyberBiology.Core
             Direction = value % 8;
         }
 
-        public void Rotate(int value)
-        {
-            int newdrct = Direction + value;
-            if (newdrct >= 8)
-            {
-                newdrct = newdrct - 8;
-            }
-            Direction = newdrct;
-        }
-        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int CountY(int direction)
         {
             direction = direction % 8;
-            if (direction == 0 || direction == 1 || direction == 2)
-            {
-                return World.Instance.LimitY(y - 1);
-            }
 
-            if (direction == 4 || direction == 5 || direction == 6)
-            {
-                return World.Instance.LimitY(y + 1);
-            }
-
-            return y;
+            return World.Instance.LimitY(Y + YOffset[direction]);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int CountX(int direction)
         {
             direction = direction % 8;
-            if (direction == 0 || direction == 6 || direction == 7)
-            {
-                return World.Instance.LimitX(x - 1);
-            }
 
-            if (direction == 2 || direction == 3 || direction == 4)
-            {
-                return World.Instance.LimitX(x + 1);
-            }
-
-            return x;
-        }
-        
-        public bool TryFindDirection(CheckResult lookFor, out int direction)
-        {
-            var directionOffset = Random.Next(100);
-            for (int i = 0; i < 8; i++)
-            {
-                var xt = CountX(i + directionOffset);
-                var yt = CountY(i + directionOffset);
-
-                var checkResult = World.Instance.Check(this, xt, yt);
-                if (checkResult == lookFor)
-                {
-                    direction = (i + directionOffset) % 8;
-                    return true;
-                }
-            }
-
-            direction = -1;
-            return false;
+            return World.Instance.LimitX(X + XOffset[direction]);
         }
 
-        public Group Group()
+        public Group Group { get; private set; } = Group.Alone;
+
+        private void UpdateGroup()
         {
             Group g = 0;
-            if (mprev != null)
+            if (PrevBot != null)
             {
-                g |= Core.Group.HasPrev;
+                g |= Group.HasPrev;
             }
-            if (mnext != null)
+            if (NextBot != null)
             {
-                g |= Core.Group.HasNext;
+                g |= Group.HasNext;
             }
 
             if (g == 0)
             {
-                return Core.Group.Alone;
+                Group = Group.Alone;
+                return;
             }
-            return g;
+
+            Group = g;
         }
         
         public void ConvertMineralToEnergy(int value = 100)
@@ -137,14 +115,14 @@ namespace CyberBiology.Core
                 value = 100;
             }
 
-            if (value > mineral)
+            if (value > Mineral)
             {
-                value = mineral;
+                value = Mineral;
             }
 
             Color.GoBlue(value);
-            health += 4 * value;
-            mineral -= value;
+            Health += 4 * value;
+            Mineral -= value;
         }
 
         public bool TryMove()
@@ -161,9 +139,9 @@ namespace CyberBiology.Core
             if (checkResult == CheckResult.Empty)
             {
                 World.Instance.Matrix[xt, yt] = this;
-                World.Instance.Matrix[x, y] = null;
-                x = xt;
-                y = yt;
+                World.Instance.Matrix[X, Y] = null;
+                X = xt;
+                Y = yt;
             }
 
             return true;
@@ -172,11 +150,11 @@ namespace CyberBiology.Core
         public bool TryPhotosynthesis()
         {
             int mineralK;
-            if (mineral < 100)
+            if (Mineral < 100)
             {
                 mineralK = 0;
             }
-            else if (mineral < 400)
+            else if (Mineral < 400)
             {
                 mineralK = 1;
             }
@@ -186,19 +164,19 @@ namespace CyberBiology.Core
             }
 
             int groupK = 0;
-            if (mprev != null)
+            if (PrevBot != null)
             {
                 groupK = groupK + 4;
             }
-            if (mnext != null)
+            if (NextBot != null)
             {
                 groupK = groupK + 4;
             }
 
-            int hlt = groupK + 1 * (11 - (15 * y / World.Instance.Height) + mineralK); // формула вычисления энергии 
+            int hlt = groupK + 1 * (11 - (15 * Y / World.Instance.Height) + mineralK); // формула вычисления энергии 
             if (hlt > 0)
             {
-                health = health + hlt;   // прибавляем полученную энергия к энергии бота
+                Health = Health + hlt;   // прибавляем полученную энергия к энергии бота
                 Color.GoGreen(hlt); // бот от этого зеленеет
 
                 return true;
@@ -207,33 +185,47 @@ namespace CyberBiology.Core
             return false;
         }
 
-        public bool TryEat()
+        public bool TryEatOrganic()
         {
-            health = health - 4; // бот теряет на этом 4 энергии в независимости от результата
+            Health = Health - 4; // бот теряет на этом 4 энергии в независимости от результата
 
             if (!TryLook(CheckResult.Organic))
             {
-                if (!TryLook(CheckResult.OtherBot))
-                {
-                    return false;
-                }
+                return false;
+            }
+
+            int xt = CountX(Direction);
+            int yt = CountY(Direction);
+
+            var bot = World.Instance.Matrix[xt, yt];
+            if (bot != null)
+            {
+                World.Instance.Delete(xt, yt);
+                Health = Health + 100;
+                Color.GoRed(100);
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool TryEatOtherBot()
+        {
+            Health = Health - 4; // бот теряет на этом 4 энергии в независимости от результата
+
+            if (!TryLook(CheckResult.OtherBot))
+            {
+                return false;
             }
 
             int xt = CountX(Direction);
             int yt = CountY(Direction);
             
-            var checkResult = World.Instance.Check(this, xt, yt);
-            switch (checkResult)
+            var bot = World.Instance.Matrix[xt, yt];
+            if (bot != null)
             {
-                case CheckResult.Organic:
-                    World.Instance.Delete(xt, yt);
-                    health = health + 100; 
-                    Color.GoRed(100);
-                    return true;
-
-                case CheckResult.OtherBot:
-                    TryEat(World.Instance.Matrix[xt, yt]);
-                    return true;
+                TryEat(bot);
+                return true;
             }
 
             return false;
@@ -241,29 +233,29 @@ namespace CyberBiology.Core
 
         private bool TryEat(Bot victim)
         {
-            if (mineral >= victim.mineral)
+            if (Mineral >= victim.Mineral)
             {
-                mineral -= victim.mineral; // количество минералов у бота уменьшается на количество минералов у жертвы
+                Mineral -= victim.Mineral; // количество минералов у бота уменьшается на количество минералов у жертвы
                 // типа, стесал свои зубы о панцирь жертвы
                 World.Instance.Delete(victim);          // удаляем жертву из списков
 
-                int cl = 100 + (victim.health / 2);           // количество энергии у бота прибавляется на 100+(половина от энергии жертвы)
-                health += cl;
+                int cl = 100 + (victim.Health / 2);           // количество энергии у бота прибавляется на 100+(половина от энергии жертвы)
+                Health += cl;
                 Color.GoRed(cl);                    // бот краснеет
 
                 return true;                              // возвращаем 5
             }
 
-            victim.mineral -= mineral;
-            mineral = 0; // бот израсходовал все свои минералы на преодоление защиты
+            victim.Mineral -= Mineral;
+            Mineral = 0; // бот израсходовал все свои минералы на преодоление защиты
             //------ если здоровья в 2 раза больше, чем минералов у жертвы  ------
             //------ то здоровьем проламываем минералы ---------------------------
-            if (health >= 2 * victim.mineral)
+            if (Health >= 2 * victim.Mineral)
             {
                 World.Instance.Delete(victim);
 
-                int cl = 100 + (victim.health / 2) - 2 * victim.mineral; // вычисляем, сколько энергии смог получить бот
-                health += cl;
+                int cl = 100 + (victim.Health / 2) - 2 * victim.Mineral; // вычисляем, сколько энергии смог получить бот
+                Health += cl;
                 if (cl < 0) { cl = 0; } //========================================================================================ЗАПЛАТКА!!!!!!!!!!! - энергия не должна быть отрицательной
 
                 Color.GoRed(cl);                    // бот краснеет
@@ -272,9 +264,28 @@ namespace CyberBiology.Core
             }
 
             //--- если здоровья меньше, чем (минералов у жертвы)*2, то бот погибает от жертвы
-            victim.mineral -= health / 2;  // у жертвы минералы истраченны
-            health = 0;  // здоровье уходит в ноль
+            victim.Mineral -= Health / 2;  // у жертвы минералы истраченны
+            Health = 0;  // здоровье уходит в ноль
 
+            return false;
+        }
+
+        private bool TryFindDirection(CheckResult lookFor, out int direction)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                var xt = CountX(i + Direction);
+                var yt = CountY(i + Direction);
+
+                var checkResult = World.Instance.Check(this, xt, yt);
+                if (checkResult == lookFor)
+                {
+                    direction = (i + Direction) % 8;
+                    return true;
+                }
+            }
+
+            direction = -1;
             return false;
         }
 
@@ -283,68 +294,64 @@ namespace CyberBiology.Core
             if (TryFindDirection(lookFor, out var direction))
             {
                 SetDirection(direction);
-
                 return true;
             }
 
             return false;
         }
         
-        public CheckResult Share()
+        public bool TryShare()
         {
+            if (!TryLook(CheckResult.RelativeBot))
+                return false;
+            
             int xt = CountX(Direction);
             int yt = CountY(Direction);
 
-            var checkResult = World.Instance.Check(this, xt, yt);
-            if (checkResult != CheckResult.RelativeBot)
-            {
-                return checkResult;
-            }
-
-            //------- если мы здесь, то в данном направлении живой ----------
             var otherBot = World.Instance.Matrix[xt, yt];
-            if (health > otherBot.health)
+            if (otherBot == null)
+                return false;
+            
+            if (Health > otherBot.Health)
             {              // если у бота больше энергии, чем у соседа
-                int hlt = (health - otherBot.health) / 2;   // то распределяем энергию поровну
-                health -= hlt;
-                otherBot.health += hlt;
+                int hlt = (Health - otherBot.Health) / 2;   // то распределяем энергию поровну
+                Health -= hlt;
+                otherBot.Health += hlt;
             }
 
-            if (mineral > otherBot.mineral)
+            if (Mineral > otherBot.Mineral)
             {              // если у бота больше минералов, чем у соседа
-                int min = (mineral - otherBot.mineral) / 2;   // то распределяем их поровну
-                mineral -=  min;
-                otherBot.mineral +=  min;
+                int min = (Mineral - otherBot.Mineral) / 2;   // то распределяем их поровну
+                Mineral -=  min;
+                otherBot.Mineral +=  min;
             }
 
-            return checkResult;
+            return true;
         }
 
-        public CheckResult Give()
+        public bool TryGive()
         {
+            if (!TryLook(CheckResult.RelativeBot))
+                return false;
+
             int xt = CountX(Direction);
             int yt = CountY(Direction);
-
-            var checkResult = World.Instance.Check(this, xt, yt);
-            if (checkResult != CheckResult.RelativeBot)
-            {
-                return checkResult;
-            }
-
-            int giveHealth = health / 4;
-            health -= giveHealth;
-
+            
             var otherBot = World.Instance.Matrix[xt, yt];
-            otherBot.health += giveHealth;
+            if (otherBot == null)
+                return false;
+            
+            int giveHealth = Health / 4;
+            Health -= giveHealth;
 
-            var giveMineral = mineral / 4;
+            var giveMineral = Mineral / 4;
             if (giveMineral > 0)
             {
-                mineral -= giveMineral;
-                otherBot.mineral += giveMineral;
+                Mineral -= giveMineral;
+                otherBot.Mineral += giveMineral;
             }
 
-            return checkResult;
+            return true;
         }
         
         public bool TryGeneAttack()
@@ -361,9 +368,9 @@ namespace CyberBiology.Core
                 return false;
             }
 
-            health -= 10; 
+            Health -= 10; 
 
-            if (health > 0)
+            if (Health > 0)
             {
                 var otherBot = World.Instance.Matrix[xt, yt];
                 otherBot.Consciousness.Mutate();
@@ -379,13 +386,13 @@ namespace CyberBiology.Core
         public bool IsHealthGrow()
         {
             int t;
-            if (mineral < 100)
+            if (Mineral < 100)
             {
                 t = 0;
             }
             else
             {
-                if (mineral < 400)
+                if (Mineral < 400)
                 {
                     t = 1;
                 }
@@ -394,7 +401,7 @@ namespace CyberBiology.Core
                     t = 2;
                 }
             }
-            int hlt = 10 - (15 * y / World.Instance.Height) + t; 
+            int hlt = 10 - (15 * Y / World.Instance.Height) + t; 
             if (hlt >= 3)
             {
                 return true;
@@ -405,8 +412,7 @@ namespace CyberBiology.Core
 
         public void BotDivision()
         {
-            var @group = Group();
-            if (@group == Core.Group.Both || @group == Core.Group.Alone)
+            if (Group == Group.Both || Group == Group.Alone)
             {
                 CreateFreeChild();
             }
@@ -418,7 +424,7 @@ namespace CyberBiology.Core
         
         private bool TryCreateChildAsPart()
         {
-            if (mprev != null && mnext != null)
+            if (PrevBot != null && NextBot != null)
             {
                 return false;
             }
@@ -427,15 +433,15 @@ namespace CyberBiology.Core
             if (newBot == null)
                 return false;
 
-            if (mnext == null)
+            if (NextBot == null)
             {                   
-                mnext = newBot; 
-                newBot.mprev = this;  
+                NextBot = newBot; 
+                newBot.PrevBot = this;  
             }
             else
             {                             
-                mprev = newBot; 
-                newBot.mnext = this; 
+                PrevBot = newBot; 
+                newBot.NextBot = this; 
             }
 
             return true;
@@ -443,23 +449,23 @@ namespace CyberBiology.Core
 
         private Bot CreateFreeChild()
         {
-            health -= 150;      // бот затрачивает 150 единиц энергии на создание копии
-            if (health <= 0)
+            Health -= 150;      // бот затрачивает 150 единиц энергии на создание копии
+            if (Health <= 0)
             {
                 return null;
             }
 
-            if (!TryFindDirection(CheckResult.Empty, out int emptyDirection))
+            if (!TryLook(CheckResult.Empty))
             {
                 // если бот окружен, то он в муках погибает
-                health = 0;
+                Health = 0;
                 return null;
             }
 
-            int xt = CountX(emptyDirection);
-            int yt = CountY(emptyDirection);
+            int xt = CountX(Direction);
+            int yt = CountY(Direction);
 
-            Bot newbot = new Bot(xt, yt);
+            Bot newbot = BotFactory.Get(xt, yt);
             newbot.Consciousness.TransferFrom(Consciousness);
 
             if (Random.NextDouble() < 0.25)
@@ -467,11 +473,11 @@ namespace CyberBiology.Core
                 newbot.Consciousness.Mutate();
             }
 
-            health = health / 2;
-            newbot.health = health;
+            Health = Health / 2;
+            newbot.Health = Health;
 
-            mineral = mineral / 2;
-            newbot.mineral = mineral;
+            Mineral = Mineral / 2;
+            newbot.Mineral = Mineral;
 
             newbot.Color.CopyFrom(Color);
 
@@ -485,25 +491,25 @@ namespace CyberBiology.Core
         
         public bool TryConvertToOrganic()
         {
-            if (health >= 1)
+            if (Health >= 1)
             {
                 return false;
             }
 
             State = BotState.Organic;
 
-            if (mprev != null)
+            if (PrevBot != null)
             {
-                mprev.mnext = null;
+                PrevBot.NextBot = null;
             } 
 
-            if (mnext != null)
+            if (NextBot != null)
             {
-                mnext.mprev = null;
+                NextBot.PrevBot = null;
             }
 
-            mprev = null;
-            mnext = null;
+            PrevBot = null;
+            NextBot = null;
 
             return true;
         }
@@ -512,28 +518,28 @@ namespace CyberBiology.Core
         {
             // если бот находится на глубине ниже 48 уровня
             // то он автоматом накапливает минералы, но не более 999
-            if (y <= World.Instance.Height / 2) return false;
+            if (Y <= World.Instance.Height / 2) return false;
 
-            mineral++;
+            Mineral++;
 
-            if (y > World.Instance.Height / 6 * 4)
+            if (Y > World.Instance.Height / 6 * 4)
             {
-                mineral++;
+                Mineral++;
             }
 
-            if (y > World.Instance.Height / 6 * 5)
+            if (Y > World.Instance.Height / 6 * 5)
             {
-                mineral++;
+                Mineral++;
             }
 
-            if (mineral > 999) { mineral = 999; }
+            if (Mineral > 999) { Mineral = 999; }
 
             return true;
         }
 
         public override string ToString()
         {
-            return $"({x},{y}) {State} H:{health} M:{mineral}";
+            return $"({X},{Y}) {State} H:{Health} M:{Mineral}";
         }
     }
 }
