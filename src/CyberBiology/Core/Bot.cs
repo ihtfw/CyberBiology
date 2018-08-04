@@ -365,7 +365,7 @@ namespace CyberBiology.Core
                 return null;
             }
 
-            Bot newbot = BotFactory.Get(X + Direction.Dx, Y + Direction.Dy);
+            Bot newbot = BotFactory.Get(World.Instance.LimitX(X + Direction.Dx), World.Instance.LimitY(Y + Direction.Dy));
             newbot.Consciousness.TransferFrom(Consciousness);
 
             if (Random.NextDouble() < 0.25)
