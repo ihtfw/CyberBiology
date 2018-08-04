@@ -85,6 +85,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Core\BotFactory.cs" />
+    <Compile Include="Core\Direction.cs" />
     <Compile Include="Core\Enums\CheckResult.cs" />
     <Compile Include="Core\Enums\Actions.cs" />
     <Compile Include="Core\BotColor.cs" />

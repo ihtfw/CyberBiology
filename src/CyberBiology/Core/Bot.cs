@@ -6,9 +6,6 @@ namespace CyberBiology.Core
 {
     public class Bot
     {
-        public static readonly int[] XOffset = { -1, 0, 1, 1, 1, 0, -1, -1 };
-        public static readonly int[] YOffset = { -1, -1, -1, 0, 1, 1, 1, 0 };
-
         public const int MaxHealth = 1000;
         public const int MaxMinerals = 1000;
 
@@ -21,7 +18,7 @@ namespace CyberBiology.Core
         private Bot _prevBot;
         private Bot _nextBot;
 
-        public int Direction { get; private set; }
+        public Direction Direction { get; set; }
 
         public Bot PrevBot
         {
@@ -53,7 +50,7 @@ namespace CyberBiology.Core
             X = x;
             Y = y;
 
-            Direction = 2;
+            Direction = Direction.NORTHEAST;
             Health = 5;
             State = BotState.Alive;
         }
@@ -63,28 +60,7 @@ namespace CyberBiology.Core
         public bool IsDead => !IsAlive;
 
         public bool IsOrganic => State == BotState.Organic;
-
-        public void SetDirection(int value)
-        {
-            Direction = value % 8;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int CountY(int direction)
-        {
-            direction = direction % 8;
-
-            return World.Instance.LimitY(Y + YOffset[direction]);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int CountX(int direction)
-        {
-            direction = direction % 8;
-
-            return World.Instance.LimitX(X + XOffset[direction]);
-        }
-
+        
         public Group Group { get; private set; } = Group.Alone;
 
         private void UpdateGroup()
@@ -127,22 +103,12 @@ namespace CyberBiology.Core
 
         public bool TryMove()
         {
-            if (!TryLook(CheckResult.Empty))
+            if (!TryLook(CheckResult.Empty, out _))
             {
                 return false;
             }
 
-            int xt = CountX(Direction);
-            int yt = CountY(Direction);
-            
-            var checkResult = World.Instance.Check(this, xt, yt);
-            if (checkResult == CheckResult.Empty)
-            {
-                World.Instance.Matrix[xt, yt] = this;
-                World.Instance.Matrix[X, Y] = null;
-                X = xt;
-                Y = yt;
-            }
+            World.Instance.Move(this, Direction);
 
             return true;
         }
@@ -189,46 +155,31 @@ namespace CyberBiology.Core
         {
             Health = Health - 4; // бот теряет на этом 4 энергии в независимости от результата
 
-            if (!TryLook(CheckResult.Organic))
+            if (!TryLook(CheckResult.Organic, out var otherBot))
             {
                 return false;
             }
 
-            int xt = CountX(Direction);
-            int yt = CountY(Direction);
+            World.Instance.Delete(otherBot);
 
-            var bot = World.Instance.Matrix[xt, yt];
-            if (bot != null)
-            {
-                World.Instance.Delete(xt, yt);
-                Health = Health + 100;
-                Color.GoRed(100);
-                return true;
-            }
+            Health = Health + 100;
+            Color.GoRed(100);
 
-            return false;
+            return true;
         }
 
         public bool TryEatOtherBot()
         {
             Health = Health - 4; // бот теряет на этом 4 энергии в независимости от результата
 
-            if (!TryLook(CheckResult.OtherBot))
+            if (!TryLook(CheckResult.OtherBot, out var otherBot))
             {
                 return false;
             }
 
-            int xt = CountX(Direction);
-            int yt = CountY(Direction);
-            
-            var bot = World.Instance.Matrix[xt, yt];
-            if (bot != null)
-            {
-                TryEat(bot);
-                return true;
-            }
+            TryEat(otherBot);
 
-            return false;
+            return true;
         }
 
         private bool TryEat(Bot victim)
@@ -269,31 +220,13 @@ namespace CyberBiology.Core
 
             return false;
         }
-
-        private bool TryFindDirection(CheckResult lookFor, out int direction)
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool TryLook(CheckResult lookFor, out Bot otherBot)
         {
-            for (int i = 0; i < 8; i++)
+            if (World.Instance.TryFindDirection(this, lookFor, out var direction, out otherBot))
             {
-                var xt = CountX(i + Direction);
-                var yt = CountY(i + Direction);
-
-                var checkResult = World.Instance.Check(this, xt, yt);
-                if (checkResult == lookFor)
-                {
-                    direction = (i + Direction) % 8;
-                    return true;
-                }
-            }
-
-            direction = -1;
-            return false;
-        }
-
-        public bool TryLook(CheckResult lookFor)
-        {
-            if (TryFindDirection(lookFor, out var direction))
-            {
-                SetDirection(direction);
+                Direction = direction;
                 return true;
             }
 
@@ -302,14 +235,7 @@ namespace CyberBiology.Core
         
         public bool TryShare()
         {
-            if (!TryLook(CheckResult.RelativeBot))
-                return false;
-            
-            int xt = CountX(Direction);
-            int yt = CountY(Direction);
-
-            var otherBot = World.Instance.Matrix[xt, yt];
-            if (otherBot == null)
+            if (!TryLook(CheckResult.RelativeBot, out var otherBot))
                 return false;
             
             if (Health > otherBot.Health)
@@ -331,14 +257,7 @@ namespace CyberBiology.Core
 
         public bool TryGive()
         {
-            if (!TryLook(CheckResult.RelativeBot))
-                return false;
-
-            int xt = CountX(Direction);
-            int yt = CountY(Direction);
-            
-            var otherBot = World.Instance.Matrix[xt, yt];
-            if (otherBot == null)
+            if (!TryLook(CheckResult.RelativeBot, out var otherBot))
                 return false;
             
             int giveHealth = Health / 4;
@@ -356,23 +275,13 @@ namespace CyberBiology.Core
         
         public bool TryGeneAttack()
         {
-            if (!TryLook(CheckResult.OtherBot))
+            if (!TryLook(CheckResult.OtherBot, out var otherBot))
                 return false;
-
-            int xt = CountX(Direction);
-            int yt = CountY(Direction);
-
-            var checkResult = World.Instance.Check(this, xt, yt);
-            if (checkResult != CheckResult.OtherBot)
-            {
-                return false;
-            }
 
             Health -= 10; 
 
             if (Health > 0)
             {
-                var otherBot = World.Instance.Matrix[xt, yt];
                 otherBot.Consciousness.Mutate();
             }
 
@@ -392,15 +301,9 @@ namespace CyberBiology.Core
             }
             else
             {
-                if (Mineral < 400)
-                {
-                    t = 1;
-                }
-                else
-                {
-                    t = 2;
-                }
+                t = Mineral < 400 ? 1 : 2;
             }
+
             int hlt = 10 - (15 * Y / World.Instance.Height) + t; 
             if (hlt >= 3)
             {
@@ -424,7 +327,7 @@ namespace CyberBiology.Core
         
         private bool TryCreateChildAsPart()
         {
-            if (PrevBot != null && NextBot != null)
+            if (Group == Group.Both)
             {
                 return false;
             }
@@ -433,7 +336,7 @@ namespace CyberBiology.Core
             if (newBot == null)
                 return false;
 
-            if (NextBot == null)
+            if (Group == Group.HasPrev)
             {                   
                 NextBot = newBot; 
                 newBot.PrevBot = this;  
@@ -455,17 +358,14 @@ namespace CyberBiology.Core
                 return null;
             }
 
-            if (!TryLook(CheckResult.Empty))
+            if (!TryLook(CheckResult.Empty, out _))
             {
                 // если бот окружен, то он в муках погибает
                 Health = 0;
                 return null;
             }
 
-            int xt = CountX(Direction);
-            int yt = CountY(Direction);
-
-            Bot newbot = BotFactory.Get(xt, yt);
+            Bot newbot = BotFactory.Get(X + Direction.Dx, Y + Direction.Dy);
             newbot.Consciousness.TransferFrom(Consciousness);
 
             if (Random.NextDouble() < 0.25)
@@ -481,9 +381,9 @@ namespace CyberBiology.Core
 
             newbot.Color.CopyFrom(Color);
 
-            newbot.SetDirection((int)(Random.NextDouble() * 8));
+            newbot.Direction = Direction.Random();
 
-            World.Instance.Matrix[xt, yt] = newbot;
+            World.Instance.Matrix[newbot.X, newbot.Y] = newbot;
 
             return newbot;
         }
@@ -540,6 +440,16 @@ namespace CyberBiology.Core
         public override string ToString()
         {
             return $"({X},{Y}) {State} H:{Health} M:{Mineral}";
+        }
+
+        public bool IsSurrounded()
+        {
+            if (World.Instance.TryFindDirection(this, CheckResult.Empty, out _, out _))
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

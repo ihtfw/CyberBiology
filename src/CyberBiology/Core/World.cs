@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CyberBiology.Core.Enums;
@@ -33,13 +34,13 @@ namespace CyberBiology.Core
 
         public int BlocksY { get; }
 
-        public int Generation { get; private set; }
+        public int Iteration { get; private set; }
 
         public int Population { get; private set; }
 
         public int Organic { get; private set; }
 
-        public void NextGenerationInParallel()
+        public void NextIterationInParallel()
         {
             int totalPopulation = 0;
             int totalOrganic = 0;
@@ -85,10 +86,10 @@ namespace CyberBiology.Core
             
             Population = totalPopulation;
             Organic = totalOrganic;
-            Generation++;
+            Iteration++;
         }
 
-        public void NextGeneration()
+        public void NextIteration()
         {
             int population = 0;
             int organic = 0;
@@ -114,7 +115,7 @@ namespace CyberBiology.Core
 
             Population = population;
             Organic = organic;
-            Generation++;
+            Iteration++;
         }
         
         public void CreateAdam()
@@ -122,10 +123,86 @@ namespace CyberBiology.Core
             var bot = BotFactory.Get(Width / 2, Height / 2);
             bot.Health = 990;
 
-            bot.SetDirection(5);
+            bot.Direction = Direction.Random();
             bot.Color.Adam();
             
             Matrix[bot.X, bot.Y] = bot; 
+        }
+
+        public Bot GetFor(Bot bot, Direction direction)
+        {
+            var xt = bot.X + direction.Dx;
+            var yt = bot.Y + direction.Dy;
+
+            return Matrix[xt, yt];
+        }
+
+        public bool TryFindDirection(Bot checkForBot, CheckResult lookFor, out Direction foundDirection, out Bot directionBot)
+        {
+            foreach (var direction in Direction.From(checkForBot.Direction))
+            {
+                var xt = checkForBot.X + direction.Dx;
+                var yt = checkForBot.Y + direction.Dy;
+
+                if (yt < 0 || yt >= Height)
+                {
+                    if (lookFor == CheckResult.Wall)
+                    {
+                        foundDirection = direction;
+                        directionBot = null;
+                        return true;
+                    }
+                    continue;
+                }
+
+                xt = LimitX(xt);
+
+                var otherBot = Matrix[xt, yt];
+                if (otherBot == null)
+                {
+                    if (lookFor == CheckResult.Empty)
+                    {
+                        foundDirection = direction;
+                        directionBot = null;
+                        return true;
+                    }
+                    continue;
+                }
+
+                if (otherBot.IsOrganic)
+                {
+                    if (lookFor == CheckResult.Organic)
+                    {
+                        foundDirection = direction;
+                        directionBot = otherBot;
+                        return true;
+                    }
+                    continue;
+                }
+
+                if (otherBot.Consciousness.IsRelative(checkForBot.Consciousness))
+                {
+                    if (lookFor == CheckResult.RelativeBot)
+                    {
+                        foundDirection = direction;
+                        directionBot = otherBot;
+                        return true;
+                    }
+                    continue;
+                }
+
+                if (lookFor == CheckResult.OtherBot)
+                {
+                    foundDirection = direction;
+                    directionBot = otherBot;
+                    return true;
+                }
+            }
+
+            foundDirection = null;
+            directionBot = null;
+
+            return false;
         }
 
         public CheckResult Check(Bot checkForBot, int x, int y)
@@ -154,6 +231,7 @@ namespace CyberBiology.Core
             return CheckResult.OtherBot;                         
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int LimitX(int x)
         {
             if (x > Width - 1)
@@ -165,6 +243,7 @@ namespace CyberBiology.Core
             return x;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int LimitY(int y)
         {
             if (y > Width - 1)
@@ -199,6 +278,15 @@ namespace CyberBiology.Core
             BotFactory.ToCache(bot);
 
             return true;
+        }
+
+        public void Move(Bot bot, Direction direction)
+        {
+            int xt = bot.X + direction.Dx;
+            int yt = bot.Y + direction.Dy;
+
+            Matrix[xt, yt] = bot;
+            Matrix[bot.X, bot.Y] = null;
         }
     }
 

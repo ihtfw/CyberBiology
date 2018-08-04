@@ -3,14 +3,15 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:cyberBiology="clr-namespace:CyberBiology"
         mc:Ignorable="d" WindowStartupLocation="CenterScreen" WindowState="Maximized"
-        Icon="Resources/icon.ico"
+        Icon="Resources/icon.ico" d:DataContext="{d:DesignInstance cyberBiology:CyberBiologyViewModel}"
         Height="450" Width="800">
     <DockPanel>
         
         <StatusBar DockPanel.Dock="Bottom">
-            <TextBlock Text="Generation:"></TextBlock>
-            <TextBlock Text="{Binding Path=Generation}"></TextBlock>
+            <TextBlock Text="Iteration:"></TextBlock>
+            <TextBlock Text="{Binding Path=Iteration}"></TextBlock>
 
             <TextBlock Text="Population:"></TextBlock>
             <TextBlock Text="{Binding Path=Population}"></TextBlock>

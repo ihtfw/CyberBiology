@@ -73,7 +73,7 @@ namespace CyberBiology.Core
                 bot.BotDivision();
             }           
             
-            bot.Health -= 3;   // каждый ход отнимает 3 единички здоровья(энегрии)
+            bot.Health -= 1;  
             if (bot.TryConvertToOrganic())
                 return;
 
@@ -174,7 +174,7 @@ namespace CyberBiology.Core
         
         private void SkipNextIfSurrounded(Bot bot, BotAction action)
         {
-            if (bot.TryLook(CheckResult.Empty))
+            if (bot.IsSurrounded())
             {
                 return;
             }
