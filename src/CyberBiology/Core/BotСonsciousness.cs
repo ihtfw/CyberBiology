@@ -21,7 +21,7 @@ namespace CyberBiology.Core
                 hash = 0;
                 for (var i = 0; i < _actions.Length; i++)
                 {
-                    hash += (int)_actions[0].Action;
+                    hash += (int)_actions[i].Action;
                 }
             }
         }

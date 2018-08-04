@@ -61,11 +61,11 @@ namespace CyberBiology.UI
                         {
                             bmp.DrawRectangleWH(x1, y1, CellSize, CellSize, BotBorderColor);
 
-                            int green = bot.Color.G - bot.Color.G * bot.Health / 2000;
+                            var green = bot.Color.G - bot.Color.G * bot.Health / 2000f;
                             
                             int blue = (int)(bot.Color.B * 0.8 - bot.Color.B * bot.Mineral / 2000);
 
-                            var color = Color.FromRgb((byte)bot.Color.R, BotColor.Limit(green), BotColor.Limit(blue));
+                            var color = Color.FromRgb((byte)bot.Color.R, BotColor.Limit((int)green), BotColor.Limit(blue));
 
                             bmp.FillRectangleWH(x1 + 1, y1 + 1, CellSize - 1, CellSize - 1, color);
                         }

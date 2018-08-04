@@ -34,7 +34,10 @@ namespace CyberBiology
             {
                 _world = new World(Width / WorldDrawer.CellSize, Height / WorldDrawer.CellSize);
                 _world.CreateAdam();
-                
+
+                SizeX = _world.Width;
+                SizeY = _world.Height;
+
                 Execute.OnUIThread(() =>
                 {
                     WorldImage = _worldDrawer.Create(_world);
@@ -43,7 +46,8 @@ namespace CyberBiology
 
                 while (true)
                 {
-                    _world.NextIterationInParallel();
+                    //_world.NextIterationInParallel();
+                    _world.NextIteration();
 
                     var k = (_world.Population + _world.Organic) / 5000 + 1;
                     if (_world.Iteration % k == 0)
@@ -61,6 +65,9 @@ namespace CyberBiology
             }, TaskCreationOptions.LongRunning);
         }
         
+        public int SizeX { get; private set; }
+        public int SizeY { get; private set; }
+
         public int Width { get; private set; }
         public int Height { get; private set; }
 

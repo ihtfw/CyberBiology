@@ -13,8 +13,8 @@ namespace CyberBiology.Core
 
         public int X;
         public int Y;
-        public int Health;
-        public int Mineral;
+        public float Health;
+        public float Mineral;
         private Bot _prevBot;
         private Bot _nextBot;
 
@@ -51,6 +51,13 @@ namespace CyberBiology.Core
             Y = y;
 
             Direction = Direction.NORTHEAST;
+            Reset();
+        }
+
+        private void Reset()
+        {
+            Color.Reset();
+            Mineral = 0;
             Health = 5;
             State = BotState.Alive;
         }
@@ -84,7 +91,7 @@ namespace CyberBiology.Core
             Group = g;
         }
         
-        public void ConvertMineralToEnergy(int value = 100)
+        public void ConvertMineralToEnergy(float value = 100f)
         {
             if (value > 100)
             {
@@ -96,7 +103,7 @@ namespace CyberBiology.Core
                 value = Mineral;
             }
 
-            Color.GoBlue(value);
+            Color.GoBlue((int)value);
             Health += 4 * value;
             Mineral -= value;
         }
@@ -190,33 +197,34 @@ namespace CyberBiology.Core
                 // типа, стесал свои зубы о панцирь жертвы
                 World.Instance.Delete(victim);          // удаляем жертву из списков
 
-                int cl = 100 + (victim.Health / 2);           // количество энергии у бота прибавляется на 100+(половина от энергии жертвы)
+                var cl = 100 + (victim.Health / 2f);           // количество энергии у бота прибавляется на 100+(половина от энергии жертвы)
                 Health += cl;
-                Color.GoRed(cl);                    // бот краснеет
+                Color.GoRed((int)cl);                    // бот краснеет
 
                 return true;                              // возвращаем 5
             }
 
             victim.Mineral -= Mineral;
-            Mineral = 0; // бот израсходовал все свои минералы на преодоление защиты
+            Mineral = 0; 
+            // бот израсходовал все свои минералы на преодоление защиты
             //------ если здоровья в 2 раза больше, чем минералов у жертвы  ------
             //------ то здоровьем проламываем минералы ---------------------------
             if (Health >= 2 * victim.Mineral)
             {
                 World.Instance.Delete(victim);
 
-                int cl = 100 + (victim.Health / 2) - 2 * victim.Mineral; // вычисляем, сколько энергии смог получить бот
-                Health += cl;
-                if (cl < 0) { cl = 0; } //========================================================================================ЗАПЛАТКА!!!!!!!!!!! - энергия не должна быть отрицательной
+                var cl = 100 + (victim.Health / 2f) - 2 * victim.Mineral; // вычисляем, сколько энергии смог получить бот
+                if (cl < 0) { cl = 0; }
 
-                Color.GoRed(cl);                    // бот краснеет
+                Health += cl;
+                Color.GoRed((int)cl);                 
 
                 return true;
             }
 
-            //--- если здоровья меньше, чем (минералов у жертвы)*2, то бот погибает от жертвы
-            victim.Mineral -= Health / 2;  // у жертвы минералы истраченны
-            Health = 0;  // здоровье уходит в ноль
+            victim.Mineral -= Health / 2f; 
+            Health = 0;
+            TryConvertToOrganic();
 
             return false;
         }
@@ -240,14 +248,14 @@ namespace CyberBiology.Core
             
             if (Health > otherBot.Health)
             {              // если у бота больше энергии, чем у соседа
-                int hlt = (Health - otherBot.Health) / 2;   // то распределяем энергию поровну
+                var hlt = (Health - otherBot.Health) / 2f;   // то распределяем энергию поровну
                 Health -= hlt;
                 otherBot.Health += hlt;
             }
 
             if (Mineral > otherBot.Mineral)
             {              // если у бота больше минералов, чем у соседа
-                int min = (Mineral - otherBot.Mineral) / 2;   // то распределяем их поровну
+                var min = (Mineral - otherBot.Mineral) / 2f;   // то распределяем их поровну
                 Mineral -=  min;
                 otherBot.Mineral +=  min;
             }
@@ -260,10 +268,10 @@ namespace CyberBiology.Core
             if (!TryLook(CheckResult.RelativeBot, out var otherBot))
                 return false;
             
-            int giveHealth = Health / 4;
+            var giveHealth = Health / 4f;
             Health -= giveHealth;
 
-            var giveMineral = Mineral / 4;
+            var giveMineral = Mineral / 4f;
             if (giveMineral > 0)
             {
                 Mineral -= giveMineral;
@@ -315,7 +323,7 @@ namespace CyberBiology.Core
 
         public void BotDivision()
         {
-            if (Group == Group.Both || Group == Group.Alone)
+            if (Group == Group.Both)
             {
                 CreateFreeChild();
             }
@@ -366,6 +374,7 @@ namespace CyberBiology.Core
             }
 
             Bot newbot = BotFactory.Get(World.Instance.LimitX(X + Direction.Dx), World.Instance.LimitY(Y + Direction.Dy));
+            newbot.Reset();
             newbot.Consciousness.TransferFrom(Consciousness);
 
             if (Random.NextDouble() < 0.25)
@@ -388,7 +397,6 @@ namespace CyberBiology.Core
             return newbot;
         }
 
-        
         public bool TryConvertToOrganic()
         {
             if (Health >= 1)

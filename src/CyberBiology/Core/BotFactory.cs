@@ -13,8 +13,10 @@ namespace CyberBiology.Core
                 bot.X = x;
                 bot.Y = y;
             }
-
-            bot = new Bot(x, y);
+            else
+            {
+                bot = new Bot(x, y);
+            }
 
             return bot;
         }

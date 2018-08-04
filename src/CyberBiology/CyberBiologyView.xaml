@@ -10,6 +10,12 @@
     <DockPanel>
         
         <StatusBar DockPanel.Dock="Bottom">
+            <TextBlock Text="X:"></TextBlock>
+            <TextBlock Text="{Binding Path=SizeX}"></TextBlock>
+
+            <TextBlock Text="Y:"></TextBlock>
+            <TextBlock Text="{Binding Path=SizeY}"></TextBlock>
+
             <TextBlock Text="Iteration:"></TextBlock>
             <TextBlock Text="{Binding Path=Iteration}"></TextBlock>
 

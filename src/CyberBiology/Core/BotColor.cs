@@ -13,6 +13,13 @@
             B = botColor.B;
         }
 
+        public void Reset()
+        {
+            R = 0;
+            G = 0;
+            B = 0;
+        }
+
         public void GoGreen(int value)
         {
             // добавляем зелени
