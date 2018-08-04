@@ -128,15 +128,7 @@ namespace CyberBiology.Core
             
             Matrix[bot.X, bot.Y] = bot; 
         }
-
-        public Bot GetFor(Bot bot, Direction direction)
-        {
-            var xt = bot.X + direction.Dx;
-            var yt = bot.Y + direction.Dy;
-
-            return Matrix[xt, yt];
-        }
-
+        
         public bool TryFindDirection(Bot checkForBot, CheckResult lookFor, out Direction foundDirection, out Bot directionBot)
         {
             foreach (var direction in Direction.From(checkForBot.Direction))
@@ -205,32 +197,6 @@ namespace CyberBiology.Core
             return false;
         }
 
-        public CheckResult Check(Bot checkForBot, int x, int y)
-        {
-            if (y < 0 || y >= Height)
-            { 
-                return CheckResult.Wall;                    
-            }
-
-            var bot = Matrix[x, y];
-            if (bot == null)
-            {
-                return CheckResult.Empty;
-            }
-
-            if (bot.IsOrganic)
-            { 
-                return CheckResult.Organic;
-            }
-
-            if (bot.Consciousness.IsRelative(checkForBot.Consciousness))
-            { 
-                return CheckResult.RelativeBot;                     
-            }
-
-            return CheckResult.OtherBot;                         
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int LimitX(int x)
         {
@@ -255,11 +221,6 @@ namespace CyberBiology.Core
             return y;
         }
 
-        public bool Delete(int x, int y)
-        {
-            return Delete(Matrix[x, y]);
-        }
-
         public bool Delete(Bot bot)
         {
             if (bot == null)
@@ -282,8 +243,8 @@ namespace CyberBiology.Core
 
         public void Move(Bot bot, Direction direction)
         {
-            int xt = bot.X + direction.Dx;
-            int yt = bot.Y + direction.Dy;
+            int xt = LimitX(bot.X + direction.Dx);
+            int yt = LimitY(bot.Y + direction.Dy);
 
             Matrix[xt, yt] = bot;
             Matrix[bot.X, bot.Y] = null;

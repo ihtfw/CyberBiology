@@ -38,20 +38,14 @@ namespace CyberBiology.Core
 
         public void SkipActions(int count)
         {
-            _currentActionIndex += count;
-            _currentActionIndex = _currentActionIndex % Size;
+            _currentActionIndex = (_currentActionIndex + count) % Size;
         }
         
         public BotAction NextAction()
         {
             var action = _actions[_currentActionIndex];
 
-            _currentActionIndex++;
-
-            if (action.HasParam)
-                _currentActionIndex++;
-
-            _currentActionIndex = _currentActionIndex % Size;
+            SkipActions(action.HasParam ? 2 : 1);
 
             return action;
         }
@@ -73,7 +67,7 @@ namespace CyberBiology.Core
 
         public void Mutate()
         {
-            int index = (int)(Random.NextDouble() * 64); 
+            int index = (int)(Random.NextDouble() * Size); 
 
             var action = _actions[index];
             action.Mutate();
