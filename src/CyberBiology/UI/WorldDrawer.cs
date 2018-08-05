@@ -11,7 +11,7 @@ namespace CyberBiology.UI
 
         public Color BotBorderColor { get; set; } = Colors.Black;
 
-        public Color OrganicColor { get; set; } = Colors.Orange;// Color.FromRgb(200, 200, 200);
+        public Color OrganicColor { get; set; } = Color.FromRgb(200, 200, 200);
 
         public const int CellSize = 4;
 

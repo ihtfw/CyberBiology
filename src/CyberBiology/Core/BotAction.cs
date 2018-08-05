@@ -39,26 +39,14 @@ namespace CyberBiology.Core
                     case Actions.Skip:
                     case Actions.Rotate:
                     case Actions.Look:
+                    case Actions.Eat:
                         HasParam = true;
-                        IsStopAction = false;
-                        break;
-
-                    case Actions.Move:
-                    case Actions.BotDivision:
-                        IsStopAction = true;
-                        HasParam = false;
-                        break;
-
-                    default:
-                        IsStopAction = false;
-                        HasParam = false;
                         break;
                 }
             }
         }
 
         public bool HasParam { get; private set; }
-        public bool IsStopAction { get; private set; }
         
         public void Mutate()
         {

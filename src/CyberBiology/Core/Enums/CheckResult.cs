@@ -3,7 +3,10 @@
     public enum CheckResult
     {
         Wall, Empty,
-        Organic, RelativeBot, OtherBot
+        Organic,
+        RelativeBot,
+        OtherBot,
+        AnyBot
     }
 
 }

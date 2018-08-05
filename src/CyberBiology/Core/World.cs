@@ -219,6 +219,11 @@ namespace CyberBiology.Core
                 return lookFor == CheckResult.Organic;
             }
 
+            if (lookFor == CheckResult.AnyBot)
+            {
+                return true;
+            }
+
             if (directionBot.Consciousness.IsRelative(checkForBot.Consciousness))
             {
                 return lookFor == CheckResult.RelativeBot;
@@ -231,7 +236,7 @@ namespace CyberBiology.Core
 
             return false;
         }
-
+        
         public bool TryFindDirection(Bot checkForBot, CheckResult lookFor, out Direction foundDirection, out Bot directionBot)
         {
             foreach (var direction in Direction.From(checkForBot.Direction))

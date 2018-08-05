@@ -53,6 +53,7 @@ namespace CyberBiology.Core
         public BotСonsciousness Consciousness { get; } = new BotСonsciousness();
 
         public BotColor Color { get; } = new BotColor();
+
         public BotState State { get; private set; }
         
         public Bot(int x, int y)
@@ -60,7 +61,7 @@ namespace CyberBiology.Core
             X = x;
             Y = y;
 
-            Direction = Direction.NORTHEAST;
+            Direction = Direction.NorthEast;
             Reset();
         }
 
@@ -147,62 +148,53 @@ namespace CyberBiology.Core
             return true;
         }
 
-        public bool TryEatOtherBot()
+        public bool TryEatBot(CheckResult checkResult)
         {
-            if (!CheckDirectionFor(CheckResult.OtherBot, out var otherBot))
+            if (!CheckDirectionFor(checkResult, out var victim))
             {
                 return false;
             }
 
-            TryEat(otherBot);
-
-            return true;
-        }
-
-        private bool TryEat(Bot victim)
-        {
             if (Mineral >= victim.Mineral)
             {
-                Mineral -= victim.Mineral; 
+                Mineral -= victim.Mineral;
 
-                World.Instance.Delete(victim);         
+                World.Instance.Delete(victim);
 
-                var cl = victim.Health / 4f;           
+                var cl = victim.Health / 4f;
                 Health += cl;
-                Color.GoRed(cl);                  
+                Color.GoRed(cl);
 
-                return true;                              
+                return true;
             }
 
             victim.Mineral -= Mineral;
-            Mineral = 0; 
+            Mineral = 0;
 
             if (Health >= 2 * victim.Mineral)
             {
                 World.Instance.Delete(victim);
 
-                var cl = victim.Health / 4f - 2f * victim.Mineral; 
+                var cl = victim.Health / 4f - 2f * victim.Mineral;
                 if (cl < 0) { cl = 0; }
 
                 Health += cl;
-                Color.GoRed(cl);                 
+                Color.GoRed(cl);
 
                 return true;
             }
 
-            victim.Mineral -= Health / 2f; 
+            victim.Mineral -= Health / 2f;
             Health = 0;
 
             return false;
         }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool CheckDirectionFor(CheckResult lookFor, out Bot otherBot)
         {
-            //if (World.Instance.TryFindDirection(this, lookFor, out var direction, out otherBot))
-                if (World.Instance.CheckDirectionFor(this, lookFor, Direction, out otherBot))
+            if (World.Instance.CheckDirectionFor(this, lookFor, Direction, out otherBot))
             {
-                //Direction = direction;
                 return true;
             }
 
@@ -219,19 +211,6 @@ namespace CyberBiology.Core
 
             return false;
         }
-        /*
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool TryLook(CheckResult lookFor, out Bot otherBot)
-        {
-
-            if (World.Instance.TryFindDirection(this, lookFor, out var direction, out otherBot))
-            {
-                Direction = direction;
-                return true;
-            }
-
-            return false;
-        }*/
         
         public bool TryShare()
         {

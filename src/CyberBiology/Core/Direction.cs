@@ -7,22 +7,22 @@ namespace CyberBiology.Core
     {
         private static readonly Random Rnd = new Random();
 
-        public static readonly Direction NORTHWEST = new Direction(0, -1, -1);
-        public static readonly Direction NORTH = new Direction(1, 0, -1);
-        public static readonly Direction NORTHEAST = new Direction(2, 1, -1);
-        public static readonly Direction EAST = new Direction(3, 1, 0);
-        public static readonly Direction SOUTHEAST = new Direction(4, 1, 1);
-        public static readonly Direction SOUTH = new Direction(5, 0, 1);
-        public static readonly Direction SOUTHWEST = new Direction(6, -1, 1);
-        public static readonly Direction WEST = new Direction(7, -1, 0);
-       
+        public static readonly Direction NorthWest = new Direction(0, -1, -1);
+        public static readonly Direction North = new Direction(1, 0, -1);
+        public static readonly Direction NorthEast = new Direction(2, 1, -1);
+        public static readonly Direction East = new Direction(3, 1, 0);
+        public static readonly Direction SouthEast = new Direction(4, 1, 1);
+        public static readonly Direction South = new Direction(5, 0, 1);
+        public static readonly Direction SouthWest = new Direction(6, -1, 1);
+        public static readonly Direction West = new Direction(7, -1, 0);
+
         private readonly int _index;
         public readonly int Dx;
         public readonly int Dy;
 
         public static readonly IReadOnlyList<Direction> All = new List<Direction>
         {
-            NORTHWEST, NORTH, NORTHEAST, EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST
+            NorthWest, North, NorthEast, East, SouthEast, South, SouthWest, West
         };
 
         
@@ -35,8 +35,8 @@ namespace CyberBiology.Core
 
         private static readonly Direction[] array =
         {
-            NORTHWEST, NORTH, NORTHEAST, EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST,
-            NORTHWEST, NORTH, NORTHEAST, EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST,
+            NorthWest, North, NorthEast, East, SouthEast, South, SouthWest, West,
+            NorthWest, North, NorthEast, East, SouthEast, South, SouthWest, West,
         };
 
         public static IEnumerable<Direction> From(Direction direction)

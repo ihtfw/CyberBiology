@@ -62,7 +62,7 @@ namespace CyberBiology.Core
                     bot.Direction = Direction.Offset(bot.Direction, bot.Consciousness.Param(action));
                     break;
                 case Actions.Look:
-                    bot.TryLook(ToCheckResult(bot.Consciousness.Param(action)));
+                    bot.TryLook(ToLookCheckResult(bot.Consciousness.Param(action)));
                     break;
                 case Actions.Skip:
                     var param = bot.Consciousness.Param(action);
@@ -77,11 +77,8 @@ namespace CyberBiology.Core
                 case Actions.Move:
                     bot.TryMove();
                     break;
-                case Actions.EatOtherBot:
-                    bot.TryEatOtherBot();
-                    break;
-                case Actions.EatOrganic:
-                    bot.TryEatOrganic();
+                case Actions.Eat:
+                    bot.TryEatBot(ToEatCheckResult(bot.Consciousness.Param(action)));
                     break;
                 case Actions.Share:
                     bot.TryShare();
@@ -109,7 +106,7 @@ namespace CyberBiology.Core
             return true;
         }
 
-        private CheckResult ToCheckResult(int param)
+        private CheckResult ToLookCheckResult(int param)
         {
             switch (param % 4)
             {
@@ -121,6 +118,20 @@ namespace CyberBiology.Core
                     return CheckResult.OtherBot;
                 default:
                     return CheckResult.RelativeBot;
+            }
+        }
+        private CheckResult ToEatCheckResult(int param)
+        {
+            switch (param % 4)
+            {
+                case 0:
+                    return CheckResult.Organic;
+                case 1:
+                    return CheckResult.RelativeBot;
+                case 2:
+                    return CheckResult.OtherBot;
+                default:
+                    return CheckResult.AnyBot;
             }
         }
 
