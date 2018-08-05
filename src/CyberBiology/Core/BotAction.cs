@@ -36,9 +36,9 @@ namespace CyberBiology.Core
 
                 switch (Action)
                 {
-                    case Actions.CheckHealth:
-                    case Actions.CheckMinerals:
                     case Actions.Skip:
+                    case Actions.Rotate:
+                    case Actions.Look:
                         HasParam = true;
                         IsStopAction = false;
                         break;
@@ -62,7 +62,7 @@ namespace CyberBiology.Core
         
         public void Mutate()
         {
-            Action = (Actions)(Random.NextDouble() * (MaxActionValue + MinActionValue));
+            Action = (Actions)(Random.Next(1000) % (MaxActionValue + MinActionValue));
         }
         
         public bool IsValid()

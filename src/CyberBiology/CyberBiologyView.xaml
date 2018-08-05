@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:cyberBiology="clr-namespace:CyberBiology"
+        xmlns:cal="http://www.caliburnproject.org"
         mc:Ignorable="d" WindowStartupLocation="CenterScreen" WindowState="Maximized"
         Icon="Resources/icon.ico" d:DataContext="{d:DesignInstance cyberBiology:CyberBiologyViewModel}"
         Height="450" Width="800">
@@ -24,7 +25,24 @@
 
             <TextBlock Text="Organic:"></TextBlock>
             <TextBlock Text="{Binding Path=Organic}"></TextBlock>
+
+            <TextBlock Text="Empty:"></TextBlock>
+            <TextBlock Text="{Binding Path=Empty}"></TextBlock>
         </StatusBar>
+
+        <StackPanel DockPanel.Dock="Left">
+            <StackPanel.Resources>
+                <Style TargetType="Button">
+                    <Setter Property="Margin" Value="3"></Setter>
+                    <Setter Property="Padding" Value="3"></Setter>
+                    <Setter Property="FontSize" Value="17"></Setter>
+                    <Setter Property="FontWeight" Value="Bold"></Setter>
+                </Style>
+            </StackPanel.Resources>
+            <Button Content="C" ToolTip="Clear world" cal:Message.Attach="ClearWorld"></Button>
+            <Button Content="+" ToolTip="Add Random Bot" cal:Message.Attach="AddRandomBot"></Button>
+            <Button Content="M" ToolTip="Random mutations" cal:Message.Attach="RandomMutations"></Button>
+        </StackPanel>
 
         <UniformGrid Rows="1" DockPanel.Dock="Right">
             <Slider Orientation="Vertical" Minimum="0.1" Value="1" Maximum="50" x:Name="slider" Margin="5"/>

@@ -17,6 +17,25 @@ namespace CyberBiology
             DisplayName = "CyberBiology 1.0.0";
         }
 
+        private bool _addRandomBot;
+        private bool _randomMutations;
+        private bool _clearWorld;
+
+        public void ClearWorld()
+        {
+            _clearWorld = true;
+        }
+
+        public void AddRandomBot()
+        {
+            _addRandomBot = true;
+        }
+
+        public void RandomMutations()
+        {
+            _randomMutations = true;
+        }
+
         protected override void OnViewLoaded(object view)
         {
             base.OnViewLoaded(view);
@@ -34,6 +53,10 @@ namespace CyberBiology
             {
                 _world = new World(Width / WorldDrawer.CellSize, Height / WorldDrawer.CellSize);
                 _world.CreateAdam();
+                for (int i = 0; i < Width*Height / 100; i++)
+                {
+                    _world.AddRandomBot();
+                }
 
                 SizeX = _world.Width;
                 SizeY = _world.Height;
@@ -46,8 +69,23 @@ namespace CyberBiology
 
                 while (true)
                 {
-                    //_world.NextIterationInParallel();
-                    _world.NextIteration();
+                    if (_clearWorld)
+                    {
+                        _clearWorld = false;
+                        _world.Clear();
+                    }
+                    if (_addRandomBot)
+                    {
+                        _addRandomBot = false;
+                        _world.AddRandomBot();
+                    }
+                    if (_randomMutations)
+                    {
+                        _randomMutations = false;
+                        _world.RandomMutations();
+                    }
+                    _world.NextIterationInParallel();
+                    //_world.NextIteration();
 
                     var k = (_world.Population + _world.Organic) / 5000 + 1;
                     if (_world.Iteration % k == 0)
@@ -61,6 +99,7 @@ namespace CyberBiology
                     Iteration = _world.Iteration;
                     Population = _world.Population;
                     Organic = _world.Organic;
+                    Empty = _world.Empty;
                 }
             }, TaskCreationOptions.LongRunning);
         }
@@ -76,5 +115,6 @@ namespace CyberBiology
         public int Iteration { get; private set; }
         public int Population { get; private set; }
         public int Organic { get; private set; }
+        public int Empty { get; private set; }
     }
 }

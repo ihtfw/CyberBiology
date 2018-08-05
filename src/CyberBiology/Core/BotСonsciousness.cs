@@ -59,7 +59,7 @@ namespace CyberBiology.Core
         public bool IsRelative(BotСonsciousness other)
         {
             var abs = Math.Abs(hash - other.hash);
-            if (abs < 100)
+            if (abs < 4)
                 return true;
 
             return false;
@@ -67,7 +67,7 @@ namespace CyberBiology.Core
 
         public void Mutate()
         {
-            int index = (int)(Random.NextDouble() * Size); 
+            int index = Random.Next(1000) % Size;
 
             var action = _actions[index];
             action.Mutate();

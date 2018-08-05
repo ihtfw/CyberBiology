@@ -1,4 +1,5 @@
-﻿using CyberBiology.Core.Enums;
+﻿using System;
+using CyberBiology.Core.Enums;
 
 namespace CyberBiology.Core
 {
@@ -6,85 +7,24 @@ namespace CyberBiology.Core
     {
         public void Process(Bot bot)
         {
-            if (bot.IsDead)
-                return;
+            bot.Health -= 0.01f;
 
             ActionsLoop(bot);
 
             if (bot.IsDead)
                 return;
-
-            // распределяем энергию  минералы по многоклеточному организму
-            // возможны три варианта, бот находится внутри цепочки
-            // бот имеет предыдущего бота в цепочке и не имеет следующего
-            // бот имеет следующего бота в цепочке и не имеет предыдущего
-            if (bot.Group == Group.Both)
-            {                 // бот находится внутри цепочки
-                Bot pb = bot.PrevBot; // ссылка на предыдущего бота в цепочке
-                Bot nb = bot.NextBot; // ссылка на следующего бота в цепочке
-                                // делим минералы .................................................................
-                var m = bot.Mineral + nb.Mineral + pb.Mineral; // общая сумма минералов
-                                                           //распределяем минералы между всеми тремя ботами
-                m = m / 3;
-                bot.Mineral = m;
-                nb.Mineral = m;
-                pb.Mineral = m;
-
-                // делим энергию ................................................................
-                // проверим, являются ли следующий и предыдущий боты в цепочке крайними .........
-                // если они не являются крайними, то распределяем энергию поровну       .........
-                // связанно это с тем, что в крайних ботах в цепочке должно быть больше энергии ..
-                // что бы они плодили новых ботов и удлиняли цепочку
-                if ((pb.Group == Group.Both) && (nb.Group == Group.Both))
-                { // если следующий и предыдущий боты не являются крайними
-                  // то распределяем энергию поровну
-                    var h = bot.Health + nb.Health + pb.Health;
-                    h = h / 3;
-                    bot.Health = h;
-                    nb.Health = h;
-                    pb.Health = h;
-                }
-            }else if (bot.Group == Group.HasPrev)
+            
+            if (bot.Health > Bot.MaxHealth)
             {
-                Bot pb = bot.PrevBot; // ссылка на предыдущего бота
-                if (pb.Group == Group.Both)
-                {   // если нет, то распределяем энергию в пользу текущего бота
-                    // так как он крайний и ему нужна энергия для роста цепочки
-                    var h = bot.Health + pb.Health;
-                    h = h / 4f;
-                    bot.Health = h * 3;
-                    pb.Health = h;
-                }
-            }else if (bot.Group == Group.HasNext)
-            {
-                Bot nb = bot.NextBot; // ссылка на следующего бота
-                if (nb.Group == Group.Both)
-                {      // если нет, то распределяем энергию в пользу текущего бота
-                       // так как он крайний и ему нужна энергия для роста цепочки
-                    var h = bot.Health + nb.Health;
-                    h = h / 4f;
-                    bot.Health = h * 3;
-                    nb.Health = h;
-                }
-            }
-            //... проверим уровень энергии у бота, возможно пришла пора помереть или родить
-            if (bot.Health > 999)
-            {    
                 bot.BotDivision();
-            }           
-            
-            bot.Health -= 0.1f;
-            
-            if (bot.TryConvertToOrganic())
-                return;
-
-            bot.TryAccumulateMinerals();
+            }
         }
 
         private void ActionsLoop(Bot bot)
         {
+            /*
             BotAction action = null;
-
+            
             for (int i = 0; i < 15; i++)
             {
                 var nextAction = bot.Consciousness.NextAction();
@@ -97,21 +37,45 @@ namespace CyberBiology.Core
 
             if (action == null)
                 return;
+                */
+            TryNextAction(bot, out var _);
+            /*
+            for (int i = 0; i < 10; i++)
+            {
+                if (TryNextAction(bot, out var botAction))
+                {
+                    if (botAction.IsStopAction)
+                        break;
+                }
+            }*/
+        }
+
+        private bool TryNextAction(Bot bot, out BotAction action)
+        {
+            action = bot.Consciousness.NextAction();
+            if (!action.IsValid())
+                return false;
 
             switch (action.Action)
             {
+                case Actions.Rotate:
+                    bot.Direction = Direction.Offset(bot.Direction, bot.Consciousness.Param(action));
+                    break;
+                case Actions.Look:
+                    bot.TryLook(ToCheckResult(bot.Consciousness.Param(action)));
+                    break;
                 case Actions.Skip:
                     var param = bot.Consciousness.Param(action);
                     bot.Consciousness.SkipActions(param);
                     break;
                 case Actions.Photosynthesis:
-                    bot.TryPhotosynthesis();
+                    bot.Photosynthesis();
+                    break;
+                case Actions.AccumulateMinerals:
+                    bot.AccumulateMinerals();
                     break;
                 case Actions.Move:
-                    if (bot.Group == Group.Alone)
-                    {
-                        bot.TryMove();
-                    }
+                    bot.TryMove();
                     break;
                 case Actions.EatOtherBot:
                     bot.TryEatOtherBot();
@@ -125,59 +89,41 @@ namespace CyberBiology.Core
                 case Actions.Give:
                     bot.TryGive();
                     break;
-                case Actions.CheckHealth:
-                    CheckHealth(bot, action);
-                    break;
-                case Actions.CheckMinerals:
-                    CheckMinerals(bot, action);
-                    break;
                 case Actions.BotDivision:
                     bot.BotDivision();
                     break;
                 case Actions.SkipNextIfSurrounded:
                     SkipNextIfSurrounded(bot, action);
                     break;
-                case Actions.HasEnergyIncome:
-                    if (!bot.IsHealthGrow())
-                    {
-                        bot.Consciousness.SkipActions(1);
-                    }
-                    break;
-                case Actions.ConvertMineralToEnergy:
-                    bot.ConvertMineralToEnergy();
+                case Actions.ConvertMineralToHealth:
+                    bot.ConvertMineralToHealth();
                     break;
                 case Actions.Mutate:
-                    bot.Consciousness.Mutate();
                     bot.Consciousness.Mutate();
                     break;
                 case Actions.GeneAttack:
                     bot.TryGeneAttack();
                     break;
             }
-        }
-        
-        private void CheckHealth(Bot bot, BotAction action)
-        {
-            int param = bot.Consciousness.Param(action);
 
-            var magicHealth = param * Bot.MaxHealth / BotСonsciousness.Size;
-            if (bot.Health > magicHealth)
+            return true;
+        }
+
+        private CheckResult ToCheckResult(int param)
+        {
+            switch (param % 4)
             {
-                bot.Consciousness.SkipActions(1);
+                case 0:
+                    return CheckResult.Empty;
+                case 1:
+                    return CheckResult.Organic;
+                case 2:
+                    return CheckResult.OtherBot;
+                default:
+                    return CheckResult.RelativeBot;
             }
         }
 
-        private void CheckMinerals(Bot bot, BotAction action)
-        {
-            int param = bot.Consciousness.Param(action);
-
-            var magicMinerals = param * Bot.MaxMinerals / BotСonsciousness.Size;
-            if (bot.Mineral > magicMinerals)
-            {
-                bot.Consciousness.SkipActions(1);
-            }
-        }
-        
         private void SkipNextIfSurrounded(Bot bot, BotAction action)
         {
             if (bot.IsSurrounded())

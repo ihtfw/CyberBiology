@@ -8,6 +8,8 @@ namespace CyberBiology.Core
 {
     public class World
     {
+        private static readonly Random Random = new Random();
+
         public const int BlockSize = 20;
 
         private readonly BotСonsciousnessProcessor _botСonsciousnessProcessor = new BotСonsciousnessProcessor();
@@ -39,17 +41,20 @@ namespace CyberBiology.Core
         public int Population { get; private set; }
 
         public int Organic { get; private set; }
+        public int Empty { get; private set; }
 
         public void NextIterationInParallel()
         {
             int totalPopulation = 0;
             int totalOrganic = 0;
+            int totalEmpty = 0;
 
             //Block are left to right, up to down
             Parallel.For(0, BlocksX * BlocksY, i =>
             {
                 int population = 0;
                 int organic = 0;
+                int empty = 0;
 
                 var x = i % BlocksX * BlockSize;
                 var y = i / BlocksX * BlockSize;
@@ -65,27 +70,35 @@ namespace CyberBiology.Core
                             continue;
 
                         var bot = Matrix[xw, yw];
-                        if (bot == null) continue;
-
-                        _botСonsciousnessProcessor.Process(bot);
+                        if (bot == null)
+                        {
+                            empty++;
+                            continue;
+                        }
 
                         if (bot.IsAlive)
                         {
-                            population++;
+                            _botСonsciousnessProcessor.Process(bot);
                         }
-                        else if (bot.IsOrganic)
+
+                        if (bot.IsOrganic)
                         {
                             organic++;
+                        }else if (bot.IsAlive)
+                        {
+                            population++;
                         }
                     }
                 }
 
                 Interlocked.Add(ref totalPopulation, population);
                 Interlocked.Add(ref totalOrganic, organic);
+                Interlocked.Add(ref totalEmpty, empty);
             });
             
             Population = totalPopulation;
             Organic = totalOrganic;
+            Empty = totalEmpty;
             Iteration++;
         }
 
@@ -93,100 +106,139 @@ namespace CyberBiology.Core
         {
             int population = 0;
             int organic = 0;
+            int empty = 0;
 
             for (var yw = 0; yw < Height; yw++)
             {
                 for (var xw = 0; xw < Width; xw++)
                 {
                     var bot = Matrix[xw, yw];
-                    if (bot == null) continue;
-
-                    _botСonsciousnessProcessor.Process(bot);
+                    if (bot == null)
+                    {
+                        empty++;
+                        continue;
+                    }
 
                     if (bot.IsAlive)
                     {
-                        population++;
-                    }else if (bot.IsOrganic)
+                        _botСonsciousnessProcessor.Process(bot);
+                    }
+
+                    if (bot.IsOrganic)
                     {
                         organic++;
+                    }
+                    else if (bot.IsAlive)
+                    {
+                        population++;
                     }
                 }
             }
 
             Population = population;
             Organic = organic;
+            Empty = empty;
+
             Iteration++;
         }
         
         public void CreateAdam()
         {
             var bot = BotFactory.Get(Width / 2, Height / 2);
-            bot.Health = 990;
+            bot.Health = Bot.MaxHealth + 1;
 
             bot.Direction = Direction.Random();
             bot.Color.Adam();
             
             Matrix[bot.X, bot.Y] = bot; 
         }
-        
-        public bool TryFindDirection(Bot checkForBot, CheckResult lookFor, out Direction foundDirection, out Bot directionBot)
+
+        public void CountAroundFor(Bot checkForBot, out int relative, out int other, out int empty)
         {
-            foreach (var direction in Direction.From(checkForBot.Direction))
+            relative = 0;
+            other = 0;
+            empty = 0;
+
+            foreach (var direction in Direction.All)
             {
                 var xt = checkForBot.X + direction.Dx;
                 var yt = checkForBot.Y + direction.Dy;
 
                 if (yt < 0 || yt >= Height)
                 {
-                    if (lookFor == CheckResult.Wall)
-                    {
-                        foundDirection = direction;
-                        directionBot = null;
-                        return true;
-                    }
                     continue;
                 }
 
                 xt = LimitX(xt);
 
-                var otherBot = Matrix[xt, yt];
-                if (otherBot == null)
+                var directionBot = Matrix[xt, yt];
+                if (directionBot == null)
                 {
-                    if (lookFor == CheckResult.Empty)
-                    {
-                        foundDirection = direction;
-                        directionBot = null;
-                        return true;
-                    }
+                    empty++;
                     continue;
                 }
 
-                if (otherBot.IsOrganic)
+                if (!directionBot.IsAlive)
                 {
-                    if (lookFor == CheckResult.Organic)
-                    {
-                        foundDirection = direction;
-                        directionBot = otherBot;
-                        return true;
-                    }
                     continue;
                 }
 
-                if (otherBot.Consciousness.IsRelative(checkForBot.Consciousness))
+                if (directionBot.Consciousness.IsRelative(checkForBot.Consciousness))
                 {
-                    if (lookFor == CheckResult.RelativeBot)
-                    {
-                        foundDirection = direction;
-                        directionBot = otherBot;
-                        return true;
-                    }
-                    continue;
+                    relative++;
                 }
+                else
+                {
+                    other++;
+                }
+            }
+        }
 
-                if (lookFor == CheckResult.OtherBot)
+        public bool CheckDirectionFor(Bot checkForBot, CheckResult lookFor, Direction direction, out Bot directionBot)
+        {
+            var xt = checkForBot.X + direction.Dx;
+            var yt = checkForBot.Y + direction.Dy;
+
+            directionBot = null;
+
+            if (yt < 0 || yt >= Height)
+            {
+                return lookFor == CheckResult.Wall;
+            }
+
+            xt = LimitX(xt);
+
+            directionBot = Matrix[xt, yt];
+            if (directionBot == null)
+            {
+                return lookFor == CheckResult.Empty;
+            }
+
+            if (directionBot.IsOrganic)
+            {
+                return lookFor == CheckResult.Organic;
+            }
+
+            if (directionBot.Consciousness.IsRelative(checkForBot.Consciousness))
+            {
+                return lookFor == CheckResult.RelativeBot;
+            }
+
+            if (lookFor == CheckResult.OtherBot)
+            {
+                return lookFor == CheckResult.OtherBot;
+            }
+
+            return false;
+        }
+
+        public bool TryFindDirection(Bot checkForBot, CheckResult lookFor, out Direction foundDirection, out Bot directionBot)
+        {
+            foreach (var direction in Direction.From(checkForBot.Direction))
+            {
+                if (CheckDirectionFor(checkForBot, lookFor, direction, out directionBot))
                 {
                     foundDirection = direction;
-                    directionBot = otherBot;
                     return true;
                 }
             }
@@ -225,15 +277,7 @@ namespace CyberBiology.Core
         {
             if (bot == null)
                 return false;
-
-            Bot pbot = bot.PrevBot;
-            Bot nbot = bot.NextBot;
-
-            if (pbot != null) { pbot.NextBot = null; } // удаление бота из многоклеточной цепочки
-            if (nbot != null) { nbot.PrevBot = null; }
-            bot.PrevBot = null;
-            bot.NextBot = null;
-
+            
             Matrix[bot.X, bot.Y] = null; // удаление бота с карты
 
             BotFactory.ToCache(bot);
@@ -248,8 +292,70 @@ namespace CyberBiology.Core
 
             Matrix[xt, yt] = bot;
             Matrix[bot.X, bot.Y] = null;
+
+            bot.X = xt;
+            bot.Y = yt;
+        }
+
+        public void AddRandomBot()
+        {
+            var x = Random.Next(Width);
+            var y = Random.Next(Height);
+
+            var bot = Matrix[x, y];
+            if (bot == null)
+            {
+                bot = BotFactory.Get(x, y);
+                Matrix[x, y] = bot;
+            }
+
+            bot.Reset();
+            bot.Health = Bot.MaxHealth + 1;
+
+            for (int i = 0; i < BotСonsciousness.Size; i++)
+            {
+                bot.Consciousness.Mutate();
+            }
+        }
+
+        public void RandomMutations()
+        {
+            for (var yw = 0; yw < Height; yw++)
+            {
+                for (var xw = 0; xw < Width; xw++)
+                {
+                    var bot = Matrix[xw, yw];
+                    if (bot == null)
+                    {
+                        continue;
+                    }
+
+                    if (bot.IsAlive)
+                    {
+                        for (int i = 0; i < BotСonsciousness.Size / 10; i++)
+                        {
+                            bot.Consciousness.Mutate();
+                        }
+                    }
+                }
+            }
+        }
+
+        public void Clear()
+        {
+            for (var yw = 0; yw < Height; yw++)
+            {
+                for (var xw = 0; xw < Width; xw++)
+                {
+                    var bot = Matrix[xw, yw];
+                    if (bot == null)
+                    {
+                        continue;
+                    }
+
+                    Delete(bot);
+                }
+            }
         }
     }
-
-    
 }

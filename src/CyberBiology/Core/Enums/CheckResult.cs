@@ -5,4 +5,5 @@
         Wall, Empty,
         Organic, RelativeBot, OtherBot
     }
+
 }

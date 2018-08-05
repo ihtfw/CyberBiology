@@ -2,18 +2,18 @@
 {
     public enum Actions
     {
-        Photosynthesis = 10,
+        Photosynthesis = 2,
+        AccumulateMinerals,
         Skip,
         Move,
+        Rotate,
+        Look,
         EatOtherBot,
         EatOrganic,
         Share,
         Give,
-        CheckHealth,
-        CheckMinerals,
         SkipNextIfSurrounded,
-        HasEnergyIncome,
-        ConvertMineralToEnergy,
+        ConvertMineralToHealth,
         Mutate,
         GeneAttack,
         BotDivision

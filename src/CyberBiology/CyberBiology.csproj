@@ -94,7 +94,6 @@
     <Compile Include="Core\BotСonsciousness.cs" />
     <Compile Include="Core\Enums\BotState.cs" />
     <Compile Include="Core\Enums\CheckResultUtils.cs" />
-    <Compile Include="Core\Group.cs" />
     <Compile Include="UI\WorldDrawer.cs" />
     <Compile Include="UI\WriteableBitmapExEx.cs" />
     <Page Include="CyberBiologyView.xaml">

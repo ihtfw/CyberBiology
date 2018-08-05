@@ -2,9 +2,9 @@
 {
     public class BotColor
     {
-        public int R { get; private set; }
-        public int G { get; private set; }
-        public int B { get; private set; }
+        public float R { get; private set; }
+        public float G { get; private set; }
+        public float B { get; private set; }
 
         public void CopyFrom(BotColor botColor)
         {
@@ -15,17 +15,17 @@
 
         public void Reset()
         {
-            R = 0;
-            G = 0;
-            B = 0;
+            R = 170;
+            G = 170;
+            B = 170;
         }
 
-        public void GoGreen(int value)
+        public void GoGreen(float value)
         {
             // добавляем зелени
             G = G + value;
             if (G > 255) G = 255;
-            var nm = value / 2;
+            var nm = value / 2f;
             // убавляем красноту
             R = R - nm;
             if (R < 0) B += R;
@@ -36,12 +36,12 @@
             if (B < 0) B = 0;
         }
 
-        public void GoBlue(int num)
+        public void GoBlue(float num)
         {
             // добавляем синевы
             B = B + num;
             if (B > 255) B = 255;
-            var nm = num / 2;
+            var nm = num / 2f;
             // убавляем зелень
             G = G - nm;
             if (G < 0) R +=  G;
@@ -55,12 +55,12 @@
         //жжжжжжжжжжжжжжжжжжжхжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжжж
         //=== делаем бота более красным на экране         ======
         //=== in - номер бота, на сколько окраснить       ======
-        public void GoRed(int num)
+        public void GoRed(float num)
         {
             // добавляем красноты
             R = R + num;
             if (R > 255) R = 255;
-            var nm = num / 2;
+            var nm = num / 2f;
             // убавляем зелень
             G = G - nm;
             if (G < 0) B += G;

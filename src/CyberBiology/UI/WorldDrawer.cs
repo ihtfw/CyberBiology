@@ -11,7 +11,7 @@ namespace CyberBiology.UI
 
         public Color BotBorderColor { get; set; } = Colors.Black;
 
-        public Color OrganicColor { get; set; } = Color.FromRgb(200, 200, 200);
+        public Color OrganicColor { get; set; } = Colors.Orange;// Color.FromRgb(200, 200, 200);
 
         public const int CellSize = 4;
 
@@ -61,11 +61,12 @@ namespace CyberBiology.UI
                         {
                             bmp.DrawRectangleWH(x1, y1, CellSize, CellSize, BotBorderColor);
 
-                            var green = bot.Color.G - bot.Color.G * bot.Health / 2000f;
+                            //var green = bot.Color.G - bot.Color.G * bot.Health / 2000f;
                             
-                            int blue = (int)(bot.Color.B * 0.8 - bot.Color.B * bot.Mineral / 2000);
+                            //int blue = (int)(bot.Color.B * 0.8 - bot.Color.B * bot.Mineral / 2000);
 
-                            var color = Color.FromRgb((byte)bot.Color.R, BotColor.Limit((int)green), BotColor.Limit(blue));
+                           // var color = Color.FromRgb((byte)bot.Color.R, BotColor.Limit((int)green), BotColor.Limit(blue));
+                            var color = Color.FromRgb((byte)bot.Color.R, (byte)bot.Color.G, (byte)bot.Color.B);
 
                             bmp.FillRectangleWH(x1 + 1, y1 + 1, CellSize - 1, CellSize - 1, color);
                         }
