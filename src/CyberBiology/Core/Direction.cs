@@ -16,7 +16,7 @@ namespace CyberBiology.Core
         public static readonly Direction SouthWest = new Direction(6, -1, 1);
         public static readonly Direction West = new Direction(7, -1, 0);
 
-        private readonly int _index;
+        public readonly int Index;
         public readonly int Dx;
         public readonly int Dy;
 
@@ -28,7 +28,7 @@ namespace CyberBiology.Core
         
         private Direction(int index, int dx, int dy)
         {
-            _index = index;
+            Index = index;
             Dx = dx;
             Dy = dy;
         }
@@ -42,13 +42,13 @@ namespace CyberBiology.Core
         public static IEnumerable<Direction> From(Direction direction)
         {
             yield return direction;
-            yield return array[direction._index + 1];
-            yield return array[direction._index + 2];
-            yield return array[direction._index + 3];
-            yield return array[direction._index + 4];
-            yield return array[direction._index + 5];
-            yield return array[direction._index + 6];
-            yield return array[direction._index + 7];
+            yield return array[direction.Index + 1];
+            yield return array[direction.Index + 2];
+            yield return array[direction.Index + 3];
+            yield return array[direction.Index + 4];
+            yield return array[direction.Index + 5];
+            yield return array[direction.Index + 6];
+            yield return array[direction.Index + 7];
         }
 
         public static Direction Random()
@@ -58,7 +58,12 @@ namespace CyberBiology.Core
 
         public static Direction Offset(Direction direction, int offsetValue)
         {
-            return array[(direction._index + offsetValue) % array.Length];
+            return array[(direction.Index + offsetValue) % array.Length];
+        }
+
+        public Direction ByIndex(int directionIndex)
+        {
+            return All[directionIndex];
         }
     }
 }

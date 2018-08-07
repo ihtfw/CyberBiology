@@ -1,12 +1,11 @@
 ﻿using System;
 using CyberBiology.Core.Enums;
+using CyberBiology.Core.Serialization;
 
 namespace CyberBiology.Core
 {
     public class BotAction
     {
-        private static readonly Random Random = new Random();
-
         private static readonly int MinActionValue = int.MaxValue;
         private static readonly int MaxActionValue = int.MinValue;
         private Actions _action = Actions.Photosynthesis;
@@ -50,7 +49,7 @@ namespace CyberBiology.Core
         
         public void Mutate()
         {
-            Action = (Actions)(Random.Next(1000) % (MaxActionValue + MinActionValue));
+            Action = (Actions)(Utils.Random.Next(1000) % (MaxActionValue + MinActionValue));
         }
         
         public bool IsValid()
@@ -72,6 +71,16 @@ namespace CyberBiology.Core
         public void TranferFrom(BotAction action)
         {
             Action = action.Action;
+        }
+
+        public void Reset()
+        {
+            Action = Actions.Photosynthesis;
+        }
+
+        public void Load(BotActionDto botActionDto)
+        {
+            Action = (Actions)botActionDto.Action;
         }
     }
 }

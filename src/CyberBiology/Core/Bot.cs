@@ -1,6 +1,6 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using CyberBiology.Core.Enums;
+using CyberBiology.Core.Serialization;
 
 namespace CyberBiology.Core
 {
@@ -12,9 +12,7 @@ namespace CyberBiology.Core
         public const float MinHealth = 0.01f;
         public const float MaxHealth = 100f;
         public const float MaxMinerals = 100f;
-
-        private static readonly Random Random = new Random();
-
+        
         public int X;
         public int Y;
 
@@ -50,11 +48,11 @@ namespace CyberBiology.Core
 
         public Direction Direction { get; set; }
         
-        public BotСonsciousness Consciousness { get; } = new BotСonsciousness();
+        public Consciousness Consciousness { get; } = new Consciousness();
 
-        public BotColor Color { get; } = new BotColor();
+        public Color Color { get; } = new Color();
 
-        public BotState State { get; private set; }
+        public State State { get; private set; }
         
         public Bot(int x, int y)
         {
@@ -65,19 +63,40 @@ namespace CyberBiology.Core
             Reset();
         }
 
+        public void Load(BotDto botDto)
+        {
+            X = botDto.X;
+            Y = botDto.Y;
+            Health = botDto.Health;
+            Mineral = botDto.Mineral;
+            Direction = Direction.ByIndex(botDto.DirectionIndex);
+            if (botDto.Color != null)
+            {
+                Color.CopyFrom(botDto.Color);
+            }
+            else
+            {
+                Color.Reset();
+            }
+
+            
+
+            Consciousness.Load(botDto.Consciousness);
+        }
+
         public void Reset()
         {
             Color.Reset();
             Mineral = 0;
             Health = 35;
-            State = BotState.Alive;
+            State = State.Alive;
         }
 
-        public bool IsAlive => State == BotState.Alive;
+        public bool IsAlive => State == State.Alive;
 
         public bool IsDead => !IsAlive;
 
-        public bool IsOrganic => State == BotState.Organic;
+        public bool IsOrganic => State == State.Organic;
         
         public void ConvertMineralToHealth(float value = 10f)
         {
@@ -282,7 +301,7 @@ namespace CyberBiology.Core
             newbot.Reset();
             newbot.Consciousness.TransferFrom(Consciousness);
 
-            if (Random.NextDouble() < 0.25)
+            if (Utils.Random.NextDouble() < 0.25)
             {
                 newbot.Consciousness.Mutate();
             }
@@ -307,7 +326,7 @@ namespace CyberBiology.Core
                 return false;
             }
 
-            State = BotState.Organic;
+            State = State.Organic;
             
             return true;
         }

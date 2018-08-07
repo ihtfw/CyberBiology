@@ -3,23 +3,42 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CyberBiology.Core.Enums;
+using CyberBiology.Core.Serialization;
 
 namespace CyberBiology.Core
 {
     public class World
     {
-        private static readonly Random Random = new Random();
-
         public const int BlockSize = 20;
 
-        private readonly BotСonsciousnessProcessor _botСonsciousnessProcessor = new BotСonsciousnessProcessor();
+        private readonly СonsciousnessProcessor _сonsciousnessProcessor = new СonsciousnessProcessor();
 
         public static World Instance;
-        public readonly int Height;
-        public readonly int Width;
+        public int Height { get; private set; }
+        public int Width { get; private set; }
 
         public readonly Bot[,] Matrix; //Матрица мира
-        
+
+        public void LoadWorld(WorldDto worldDto)
+        {
+            Clear();   
+
+            Width = worldDto.Width;
+            Height = worldDto.Height;
+            Iteration = worldDto.Iteration;
+
+            if (worldDto.Bots == null)
+                return;
+
+            foreach (var botDto in worldDto.Bots)
+            {
+                var bot = BotFactory.Get(botDto.X, botDto.Y);
+                bot.Load(botDto);
+
+                Matrix[bot.X, bot.Y] = bot;
+            }
+        }
+
         public World(int width, int height)
         {
             Width = width;
@@ -78,7 +97,7 @@ namespace CyberBiology.Core
 
                         if (bot.IsAlive)
                         {
-                            _botСonsciousnessProcessor.Process(bot);
+                            _сonsciousnessProcessor.Process(bot);
                         }
 
                         if (bot.IsOrganic)
@@ -121,7 +140,7 @@ namespace CyberBiology.Core
 
                     if (bot.IsAlive)
                     {
-                        _botСonsciousnessProcessor.Process(bot);
+                        _сonsciousnessProcessor.Process(bot);
                     }
 
                     if (bot.IsOrganic)
@@ -148,7 +167,7 @@ namespace CyberBiology.Core
             bot.Health = Bot.MaxHealth + 1;
 
             bot.Direction = Direction.Random();
-            bot.Color.Adam();
+            bot.Color.Reset();
             
             Matrix[bot.X, bot.Y] = bot; 
         }
@@ -304,8 +323,8 @@ namespace CyberBiology.Core
 
         public void AddRandomBot()
         {
-            var x = Random.Next(Width);
-            var y = Random.Next(Height);
+            var x = Utils.Random.Next(Width);
+            var y = Utils.Random.Next(Height);
 
             var bot = Matrix[x, y];
             if (bot == null)
@@ -317,7 +336,7 @@ namespace CyberBiology.Core
             bot.Reset();
             bot.Health = Bot.MaxHealth + 1;
 
-            for (int i = 0; i < BotСonsciousness.Size; i++)
+            for (int i = 0; i < Consciousness.Size; i++)
             {
                 bot.Consciousness.Mutate();
             }
@@ -337,7 +356,7 @@ namespace CyberBiology.Core
 
                     if (bot.IsAlive)
                     {
-                        for (int i = 0; i < BotСonsciousness.Size / 10; i++)
+                        for (int i = 0; i < Consciousness.Size / 10; i++)
                         {
                             bot.Consciousness.Mutate();
                         }

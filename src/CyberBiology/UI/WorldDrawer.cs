@@ -1,6 +1,7 @@
 ﻿using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using CyberBiology.Core;
+using Color = System.Windows.Media.Color;
 
 namespace CyberBiology.UI
 {
@@ -65,7 +66,7 @@ namespace CyberBiology.UI
                             
                             //int blue = (int)(bot.Color.B * 0.8 - bot.Color.B * bot.Mineral / 2000);
 
-                           // var color = Color.FromRgb((byte)bot.Color.R, BotColor.Limit((int)green), BotColor.Limit(blue));
+                           // var color = Color.FromRgb((byte)bot.Color.R, Color.Limit((int)green), Color.Limit(blue));
                             var color = Color.FromRgb((byte)bot.Color.R, (byte)bot.Color.G, (byte)bot.Color.B);
 
                             bmp.FillRectangleWH(x1 + 1, y1 + 1, CellSize - 1, CellSize - 1, color);

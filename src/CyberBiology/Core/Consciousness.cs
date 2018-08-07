@@ -1,11 +1,10 @@
 ﻿using System;
+using CyberBiology.Core.Serialization;
 
 namespace CyberBiology.Core
 {
-    public class BotСonsciousness
+    public class Consciousness
     {
-        private static readonly Random Random = new Random();
-
         public const int Size = 64;
 
         private int _currentActionIndex;
@@ -26,9 +25,9 @@ namespace CyberBiology.Core
             }
         }
 
-        public BotСonsciousness()
+        public Consciousness()
         {
-            for (int i = 0; i < 64; i++)
+            for (int i = 0; i < Size; i++)
             {
                 _actions[i] = new BotAction(i);
             }
@@ -56,7 +55,7 @@ namespace CyberBiology.Core
             return (int)_actions[ind].Action;
         }
 
-        public bool IsRelative(BotСonsciousness other)
+        public bool IsRelative(Consciousness other)
         {
             var abs = Math.Abs(hash - other.hash);
             if (abs < 4)
@@ -67,7 +66,7 @@ namespace CyberBiology.Core
 
         public void Mutate()
         {
-            int index = Random.Next(1000) % Size;
+            int index = Utils.Random.Next(1000) % Size;
 
             var action = _actions[index];
             action.Mutate();
@@ -75,14 +74,42 @@ namespace CyberBiology.Core
             UpdateHash();
         }
 
-        public void TransferFrom(BotСonsciousness otherСonsciousness)
+        public void TransferFrom(Consciousness otherConsciousness)
         {
             for (int i = 0; i < Size; i++)
             {
-                _actions[i].TranferFrom(otherСonsciousness._actions[i]);
+                _actions[i].TranferFrom(otherConsciousness._actions[i]);
             }
 
             UpdateHash();
+        }
+
+        public BotAction Get(int index)
+        {
+            return _actions[index];
+        }
+
+        public void Reset()
+        {
+            for (int i = 0; i < Size; i++)
+            {
+                _actions[i].Reset();
+            }
+        }
+
+        public void Load(ConsciousnessDto consciousnessDto)
+        {
+            Reset();
+
+            if (consciousnessDto == null)
+            {
+                return;
+            }
+
+            foreach (var action in consciousnessDto.Actions)
+            {
+                _actions[action.Index].Load(action);
+            }
         }
     }
 }

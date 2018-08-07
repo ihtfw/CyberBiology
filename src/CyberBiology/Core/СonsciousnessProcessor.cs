@@ -1,15 +1,14 @@
-﻿using System;
-using CyberBiology.Core.Enums;
+﻿using CyberBiology.Core.Enums;
 
 namespace CyberBiology.Core
 {
-    public class BotСonsciousnessProcessor
+    public class СonsciousnessProcessor
     {
         public void Process(Bot bot)
         {
             bot.Health -= 0.01f;
 
-            ActionsLoop(bot);
+            NextAction(bot);
 
             if (bot.IsDead)
                 return;
@@ -20,41 +19,11 @@ namespace CyberBiology.Core
             }
         }
 
-        private void ActionsLoop(Bot bot)
+        private void NextAction(Bot bot)
         {
-            /*
-            BotAction action = null;
-            
-            for (int i = 0; i < 15; i++)
-            {
-                var nextAction = bot.Consciousness.NextAction();
-                if (!nextAction.IsValid())
-                    continue;
-
-                action = nextAction;
-                break;
-            }
-
-            if (action == null)
-                return;
-                */
-            TryNextAction(bot, out var _);
-            /*
-            for (int i = 0; i < 10; i++)
-            {
-                if (TryNextAction(bot, out var botAction))
-                {
-                    if (botAction.IsStopAction)
-                        break;
-                }
-            }*/
-        }
-
-        private bool TryNextAction(Bot bot, out BotAction action)
-        {
-            action = bot.Consciousness.NextAction();
+            var action = bot.Consciousness.NextAction();
             if (!action.IsValid())
-                return false;
+                return;
 
             switch (action.Action)
             {
@@ -102,8 +71,6 @@ namespace CyberBiology.Core
                     bot.TryGeneAttack();
                     break;
             }
-
-            return true;
         }
 
         private CheckResult ToLookCheckResult(int param)

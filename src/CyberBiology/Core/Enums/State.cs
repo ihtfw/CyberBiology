@@ -1,6 +1,6 @@
 ﻿namespace CyberBiology.Core.Enums
 {
-    public enum BotState
+    public enum State
     {
         /// <summary>
         /// бот погиб и представляет из себя органику в подвешенном состоянии

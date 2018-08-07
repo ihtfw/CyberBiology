@@ -1,9 +1,13 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media.Imaging;
 using Caliburn.Micro;
 using CyberBiology.Core;
+using CyberBiology.Core.Serialization;
 using CyberBiology.UI;
+using Microsoft.Win32;
 
 namespace CyberBiology
 {
@@ -17,23 +21,114 @@ namespace CyberBiology
             DisplayName = "CyberBiology 1.0.0";
         }
 
+        public bool IsBusy { get; private set; }
+
+        private bool _isPaused;
         private bool _addRandomBot;
         private bool _randomMutations;
         private bool _clearWorld;
+        private bool _newWorld;
 
         public void ClearWorld()
         {
+            IsBusy = true;
             _clearWorld = true;
         }
 
         public void AddRandomBot()
         {
+            IsBusy = true;
             _addRandomBot = true;
         }
 
         public void RandomMutations()
         {
+            IsBusy = true;
             _randomMutations = true;
+        }
+
+        public void NewWorld()
+        {
+            IsBusy = true;
+            _newWorld = true;
+        }
+
+        public async void SaveWorld()
+        {
+            try
+            {
+                _isPaused = true;
+                var saveFileDialog = new SaveFileDialog
+                {
+                    AddExtension = true,
+                    DefaultExt = ".cbw",
+                    Filter = "CyberBiology World|*.cbw"
+                };
+                if (saveFileDialog.ShowDialog(Application.Current.MainWindow) != true)
+                {
+                    return;
+                }
+
+                IsBusy = true;
+                var path = saveFileDialog.FileName;
+
+                await Task.Factory.StartNew(() =>
+                {
+                    var worldSerializer = new WorldSerializer();
+                    worldSerializer.Save(World.Instance, path);
+                });
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Failed to save world" + Environment.NewLine + e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isPaused = false;
+                IsBusy = false;
+            }
+        }
+
+        public async void OpenWorld()
+        {
+            try
+            {
+                _isPaused = true;
+                var openFileDialog = new OpenFileDialog
+                {
+                    AddExtension = true,
+                    CheckFileExists = true,
+                    DefaultExt = ".cbw",
+                    Filter = "CyberBiology World|*.cbw"
+                };
+                if (openFileDialog.ShowDialog(Application.Current.MainWindow) != true)
+                {
+                    return;
+                }
+
+                var path = openFileDialog.FileName;
+
+                IsBusy = true;
+
+                await Task.Factory.StartNew(() =>
+                {
+                    var worldSerializer = new WorldSerializer();
+                    var worldDto = worldSerializer.Load(path);
+
+                    World.Instance.Clear();
+                    World.Instance.LoadWorld(worldDto);
+                });
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Failed to open world" + Environment.NewLine + e.Message, "Error", MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isPaused = false;
+                IsBusy = false;
+            }
         }
 
         protected override void OnViewLoaded(object view)
@@ -52,11 +147,7 @@ namespace CyberBiology
             Task.Factory.StartNew(() =>
             {
                 _world = new World(Width / WorldDrawer.CellSize, Height / WorldDrawer.CellSize);
-                _world.CreateAdam();
-                for (int i = 0; i < Width*Height / 100; i++)
-                {
-                    _world.AddRandomBot();
-                }
+                _newWorld = true;
 
                 SizeX = _world.Width;
                 SizeY = _world.Height;
@@ -69,20 +160,43 @@ namespace CyberBiology
 
                 while (true)
                 {
+                    if (_newWorld)
+                    {
+                        _newWorld = false;
+                        
+                        _world.Clear();
+                        for (int i = 0; i < Width * Height / 100; i++)
+                        {
+                            _world.AddRandomBot();
+                        }
+                        _world.CreateAdam();
+
+                        IsBusy = false;
+                    }
+
+                    if (_isPaused)
+                    {
+                        Thread.Sleep(100);
+                        continue;
+                    }
+
                     if (_clearWorld)
                     {
                         _clearWorld = false;
                         _world.Clear();
+                        IsBusy = false;
                     }
                     if (_addRandomBot)
                     {
                         _addRandomBot = false;
                         _world.AddRandomBot();
+                        IsBusy = false;
                     }
                     if (_randomMutations)
                     {
                         _randomMutations = false;
                         _world.RandomMutations();
+                        IsBusy = false;
                     }
                     _world.NextIterationInParallel();
                     //_world.NextIteration();

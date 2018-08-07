@@ -1,16 +1,16 @@
 ﻿namespace CyberBiology.Core
 {
-    public class BotColor
+    public class Color
     {
-        public float R { get; private set; }
-        public float G { get; private set; }
-        public float B { get; private set; }
+        public float R { get; set; }
+        public float G { get; set; }
+        public float B { get; set; }
 
-        public void CopyFrom(BotColor botColor)
+        public void CopyFrom(Color color)
         {
-            R = botColor.R;
-            G = botColor.G;
-            B = botColor.B;
+            R = color.R;
+            G = color.G;
+            B = color.B;
         }
 
         public void Reset()
@@ -70,14 +70,7 @@
             if (B < 0) B = 0;
             if (G < 0) G = 0;
         }
-
-        public void Adam()
-        {
-            R = 170;
-            G = 170;
-            B = 170;
-        }
-
+        
         public static byte Limit(int value)
         {
             if (value < 0) return 0;
