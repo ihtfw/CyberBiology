@@ -49,7 +49,7 @@ namespace CyberBiology.Core
         
         public void Mutate()
         {
-            Action = (Actions)(Utils.Random.Next(1000) % (MaxActionValue + MinActionValue));
+            Action = (Actions)(Utils.Next(1000) % (MaxActionValue + MinActionValue));
         }
         
         public bool IsValid()

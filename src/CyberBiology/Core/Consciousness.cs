@@ -66,7 +66,7 @@ namespace CyberBiology.Core
 
         public void Mutate()
         {
-            int index = Utils.Random.Next(1000) % Size;
+            int index = Utils.Next(1000) % Size;
 
             var action = _actions[index];
             action.Mutate();

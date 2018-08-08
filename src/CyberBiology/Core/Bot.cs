@@ -301,7 +301,7 @@ namespace CyberBiology.Core
             newbot.Reset();
             newbot.Consciousness.TransferFrom(Consciousness);
 
-            if (Utils.Random.NextDouble() < 0.25)
+            if (Utils.NextDouble() < 0.25)
             {
                 newbot.Consciousness.Mutate();
             }

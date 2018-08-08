@@ -323,14 +323,14 @@ namespace CyberBiology.Core
 
         public void AddRandomBot()
         {
-            var x = Utils.Random.Next(Width);
-            var y = Utils.Random.Next(Height);
+            var x = Utils.Next(Width);
+            var y = Utils.Next(Height);
 
             var bot = Matrix[x, y];
             if (bot == null)
             {
                 bot = BotFactory.Get(x, y);
-                Matrix[x, y] = bot;
+                Matrix[bot.X, bot.Y] = bot;
             }
 
             bot.Reset();
