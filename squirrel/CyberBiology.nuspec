@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>CyberBiology</id>
+    <version>0.0.0</version>
+    <title>CyberBiology</title>
+    <authors>ihtfw</authors>
+    <owners>ihtfw</owners>
+    <projectUrl>https://github.com/ihtfw/CyberBiology</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/ihtfw/CyberBiology/master/images/icon.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Live simulator</description>
+  </metadata>
+  <files>
+    <file src="..\src\CyberBiology\bin\Release\Resources\*" target="lib\net45\Resources\" />	
+    <file src="..\src\CyberBiology\bin\Release\*.dll" target="lib\net45\" />
+    <file src="..\src\CyberBiology\bin\Release\*.exe" target="lib\net45\" />
+    <file src="..\src\CyberBiology\bin\Release\*.config" target="lib\net45\" />
+  </files>
+</package>

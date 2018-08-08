@@ -15,10 +15,11 @@ namespace CyberBiology
     {
         private readonly WorldDrawer _worldDrawer = new WorldDrawer();
         private World _world;
+        private string baseDisplayName = "CyberBiology";
 
         public CyberBiologyViewModel()
         {
-            DisplayName = "CyberBiology 1.0.0";
+            DisplayName = baseDisplayName;
         }
 
         public bool IsBusy { get; private set; }
@@ -134,7 +135,7 @@ namespace CyberBiology
         protected override void OnViewLoaded(object view)
         {
             base.OnViewLoaded(view);
-
+            
             Width = 512;
             Height = 512;
            
@@ -198,8 +199,8 @@ namespace CyberBiology
                         _world.RandomMutations();
                         IsBusy = false;
                     }
-                    _world.NextIterationInParallel();
-                    //_world.NextIteration();
+                    //_world.NextIterationInParallel();
+                    _world.NextIteration();
 
                     var k = (_world.Population + _world.Organic) / 5000 + 1;
                     if (_world.Iteration % k == 0)
@@ -216,8 +217,21 @@ namespace CyberBiology
                     Empty = _world.Empty;
                 }
             }, TaskCreationOptions.LongRunning);
+
+            Task.Factory.StartNew(async () =>
+            {
+                var deployment = new Deployment();
+                var version = await deployment.CheckForUpdates(progress =>
+                    {
+                        DisplayName = $"{baseDisplayName}: updating {progress}%";
+                    });
+
+                DisplayName = $"{baseDisplayName}: {version}";
+            });
         }
         
+
+
         public int SizeX { get; private set; }
         public int SizeY { get; private set; }
 
