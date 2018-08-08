@@ -12,9 +12,8 @@
     <description>Live simulator</description>
   </metadata>
   <files>
-    <file src="..\src\CyberBiology\bin\Release\Resources\*" target="lib\net45\Resources\" />	
-    <file src="..\src\CyberBiology\bin\Release\*.dll" target="lib\net45\" />
-    <file src="..\src\CyberBiology\bin\Release\*.exe" target="lib\net45\" />
-    <file src="..\src\CyberBiology\bin\Release\*.config" target="lib\net45\" />
+    <file src="..\src\CyberBiology\bin\Release\*.dll" target="lib\net452\" />
+    <file src="..\src\CyberBiology\bin\Release\*.exe" target="lib\net452\" />
+    <file src="..\src\CyberBiology\bin\Release\*.config" target="lib\net452\" />
   </files>
 </package>
