@@ -1,4 +1,5 @@
 ﻿using System;
+using CyberBiology.Core.Enums;
 using CyberBiology.Core.Serialization;
 
 namespace CyberBiology.Core
@@ -7,7 +8,7 @@ namespace CyberBiology.Core
     {
         public const int Size = 64;
 
-        private int _currentActionIndex;
+        public int CurrentActionIndex { get; private set; }
 
         private readonly BotAction[] _actions = new BotAction[Size];
 
@@ -37,12 +38,12 @@ namespace CyberBiology.Core
 
         public void SkipActions(int count)
         {
-            _currentActionIndex = (_currentActionIndex + count) % Size;
+            CurrentActionIndex = (CurrentActionIndex + count) % Size;
         }
         
         public BotAction NextAction()
         {
-            var action = _actions[_currentActionIndex];
+            var action = _actions[CurrentActionIndex];
 
             SkipActions(action.HasParam ? 2 : 1);
 
@@ -95,6 +96,7 @@ namespace CyberBiology.Core
             {
                 _actions[i].Reset();
             }
+            UpdateHash();
         }
 
         public void Load(ConsciousnessDto consciousnessDto)
@@ -106,10 +108,14 @@ namespace CyberBiology.Core
                 return;
             }
 
-            foreach (var action in consciousnessDto.Actions)
+            CurrentActionIndex = consciousnessDto.CurrentActionIndex;
+
+            for (var index = 0; index < consciousnessDto.Actions.Count; index++)
             {
-                _actions[action.Index].Load(action);
+                var action = consciousnessDto.Actions[index];
+                _actions[index].Load(action);
             }
+            UpdateHash();
         }
     }
 }

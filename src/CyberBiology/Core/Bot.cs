@@ -65,23 +65,30 @@ namespace CyberBiology.Core
 
         public void Load(BotDto botDto)
         {
+            Reset();
+
             X = botDto.X;
             Y = botDto.Y;
+
             Health = botDto.Health;
-            Mineral = botDto.Mineral;
-            Direction = Direction.ByIndex(botDto.DirectionIndex);
-            if (botDto.Color != null)
-            {
-                Color.CopyFrom(botDto.Color);
-            }
-            else
-            {
-                Color.Reset();
-            }
 
-            
+            if (IsAlive)
+            {
+                Mineral = botDto.Mineral;
 
-            Consciousness.Load(botDto.Consciousness);
+                Direction = Direction.ByIndex(botDto.DirectionIndex);
+
+                if (botDto.Color != null)
+                {
+                    Color.CopyFrom(botDto.Color);
+                }
+                else
+                {
+                    Color.Reset();
+                }
+
+                Consciousness.Load(botDto.Consciousness);
+            }
         }
 
         public void Reset()

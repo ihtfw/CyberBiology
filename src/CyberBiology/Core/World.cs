@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,23 +20,23 @@ namespace CyberBiology.Core
 
         public readonly Bot[,] Matrix; //Матрица мира
 
-        public void LoadWorld(WorldDto worldDto)
+        public void LoadWorld(WorldInfo worldInfo, IEnumerable<WorldChunk> worldChunks)
         {
             Clear();   
 
-            Width = worldDto.Width;
-            Height = worldDto.Height;
-            Iteration = worldDto.Iteration;
+            Width = worldInfo.Width;
+            Height = worldInfo.Height;
+            Iteration = worldInfo.Iteration;
 
-            if (worldDto.Bots == null)
-                return;
-
-            foreach (var botDto in worldDto.Bots)
+            foreach (var worldChunk in worldChunks)
             {
-                var bot = BotFactory.Get(botDto.X, botDto.Y);
-                bot.Load(botDto);
+                foreach (var botDto in worldChunk.Bots)
+                {
+                    var bot = BotFactory.Get(botDto.X, botDto.Y);
+                    bot.Load(botDto);
 
-                Matrix[bot.X, bot.Y] = bot;
+                    Matrix[bot.X, bot.Y] = bot;
+                }
             }
         }
 

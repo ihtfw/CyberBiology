@@ -78,9 +78,9 @@ namespace CyberBiology.Core
             Action = Actions.Photosynthesis;
         }
 
-        public void Load(BotActionDto botActionDto)
+        public void Load(int action)
         {
-            Action = (Actions)botActionDto.Action;
+            Action = (Actions)action;
         }
     }
 }

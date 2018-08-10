@@ -114,10 +114,11 @@ namespace CyberBiology
                 await Task.Factory.StartNew(() =>
                 {
                     var worldSerializer = new WorldSerializer();
-                    var worldDto = worldSerializer.Load(path);
+                    var worldInfo = worldSerializer.LoadWorldInfo(path);
+                    var worldChunks = worldSerializer.LoadWorldChunks(path);
 
                     World.Instance.Clear();
-                    World.Instance.LoadWorld(worldDto);
+                    World.Instance.LoadWorld(worldInfo, worldChunks);
                 });
             }
             catch (Exception e)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Ionic.Zip;
@@ -8,28 +9,30 @@ namespace CyberBiology.Core.Serialization
 {
     public class WorldSerializer
     {
-        public void Serialize(World world, Stream stream)
+        private static string SerializeObject(object obj)
         {
-            var worldDto = new WorldDto(world);
-
-            using (var writer = new StreamWriter(stream))
-            {
-                using (var jsonTextWriter = new JsonTextWriter(writer))
-                {
-                    var serializer = CreateJsonSerializer();
-                    serializer.Serialize(jsonTextWriter, worldDto);
-                }
-            }
+            var jsonSerializerSettings = CreateJsonSerializerSettings();
+            return JsonConvert.SerializeObject(obj, jsonSerializerSettings);
         }
 
-        public static WorldDto Deserialize(Stream stream)
+        private static JsonSerializerSettings CreateJsonSerializerSettings()
+        {
+            return new JsonSerializerSettings
+            {
+                Formatting = Formatting.None,
+                NullValueHandling = NullValueHandling.Ignore,
+                DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate
+            };
+        }
+
+        private static T Deserialize<T>(Stream stream)
         {
             using (var sr = new StreamReader(stream))
             {
                 using (var jsonTextReader = new JsonTextReader(sr))
                 {
                     var serializer = CreateJsonSerializer();
-                    return serializer.Deserialize<WorldDto>(jsonTextReader);
+                    return serializer.Deserialize<T>(jsonTextReader);
                 }
             }
         }
@@ -45,22 +48,41 @@ namespace CyberBiology.Core.Serialization
             return serializer;
         }
         
-        public WorldDto Load(string path)
+        public WorldInfo LoadWorldInfo(string path)
         {
             using (var zip = ZipFile.Read(path))
             {
-                if (!zip.ContainsEntry("World"))
-                {
-                    throw new BadImageFormatException("Wrong zip file");
-                }
+                return LoadWorldInfo(zip);
+            }
+        }
 
-                var worldEntry = zip["World"];
-                using (var memoryStream = new MemoryStream())
-                {
-                    worldEntry.Extract(memoryStream);
-                    memoryStream.Seek(0, SeekOrigin.Begin);
+        private static WorldInfo LoadWorldInfo(ZipFile zip)
+        {
+            if (!zip.ContainsEntry("WorldInfo"))
+            {
+                throw new BadImageFormatException("Wrong zip file, WorldInfo not found");
+            }
 
-                    return Deserialize(memoryStream);
+            var worldEntry = zip["WorldInfo"];
+            var worldInfo = Deserialize<WorldInfo>(worldEntry.OpenReader());
+
+            return worldInfo;
+        }
+
+        public IEnumerable<WorldChunk> LoadWorldChunks(string path)
+        {
+            using (var zip = ZipFile.Read(path))
+            {
+                int chunkNumber = 0;
+                var chunkName = "WorldChunk_" + chunkNumber;
+                while (zip.ContainsEntry(chunkName))
+                {
+                    var worldChunkEntry = zip[chunkName];
+                    var worldChunk = Deserialize<WorldChunk>(worldChunkEntry.OpenReader());
+                    yield return worldChunk;
+
+                    chunkNumber++;
+                    chunkName = "WorldChunk_" + chunkNumber;
                 }
             }
         }
@@ -72,26 +94,20 @@ namespace CyberBiology.Core.Serialization
                 File.Delete(path);
             }
 
-            using (var memoryStream = new MemoryStream())
+            var worldInfo = new WorldInfo(world);
+            var worldSplitter = new WorldSplitter();
+            
+            using (var zip = new ZipFile(Encoding.UTF8))
             {
-                var worldDto = new WorldDto(world);
-                var serializer = CreateJsonSerializer();
-
-                using (var writer = new StreamWriter(memoryStream))
+                foreach (var worldChunk in worldSplitter.Split(world))
                 {
-                    using (var jsonTextWriter = new JsonTextWriter(writer))
-                    {
-                        serializer.Serialize(jsonTextWriter, worldDto);
-                        jsonTextWriter.Flush();
-                        memoryStream.Seek(0, SeekOrigin.Begin);
-
-                        using (var zip = new ZipFile(Encoding.UTF8))
-                        {
-                            zip.AddEntry("World", memoryStream);
-                            zip.Save(path);
-                        }
-                    }
+                    worldInfo.ChunksNumber = worldChunk.Number;
+                    zip.AddEntry("WorldChunk_" + worldChunk.Number, SerializeObject(worldChunk));
                 }
+
+                zip.AddEntry("WorldInfo", SerializeObject(worldInfo));
+
+                zip.Save(path);
             }
         }
     }

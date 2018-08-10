@@ -129,10 +129,11 @@
     <Compile Include="Core\Enums\Actions.cs" />
     <Compile Include="Core\Color.cs" />
     <Compile Include="Core\BotAction.cs" />
-    <Compile Include="Core\Serialization\BotActionDto.cs" />
     <Compile Include="Core\Serialization\BotDto.cs" />
     <Compile Include="Core\Serialization\ConsciousnessDto.cs" />
-    <Compile Include="Core\Serialization\WorldDto.cs" />
+    <Compile Include="Core\Serialization\WorldChunk.cs" />
+    <Compile Include="Core\Serialization\WorldInfo.cs" />
+    <Compile Include="Core\Serialization\WorldSplitter.cs" />
     <Compile Include="Core\Utils.cs" />
     <Compile Include="Core\СonsciousnessProcessor.cs" />
     <Compile Include="Core\Consciousness.cs" />

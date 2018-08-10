@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace CyberBiology.Core.Serialization
 {
@@ -8,16 +9,22 @@ namespace CyberBiology.Core.Serialization
         {
         }
 
+        [JsonProperty("c")]
+        public int CurrentActionIndex { get; set; }
+
         public ConsciousnessDto(Consciousness consciousness)
         {
-            Actions = new List<BotActionDto>(Consciousness.Size);
+            CurrentActionIndex = consciousness.CurrentActionIndex;
+
+            Actions = new List<int>(Consciousness.Size);
 
             for (int i = 0; i < Consciousness.Size; i++)
             {
-                Actions.Add(new BotActionDto(consciousness.Get(i)));
+                Actions.Add((int)consciousness.Get(i).Action);
             }
         }
 
-        public List<BotActionDto> Actions { get; set; }
+        [JsonProperty("a")]
+        public List<int> Actions { get; set; }
     }
 }
